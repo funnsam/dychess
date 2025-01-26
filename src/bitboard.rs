@@ -1,15 +1,43 @@
-use core::ops::{BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, BitXorAssign, Deref};
+use core::ops::{BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, BitXorAssign, Deref, Not};
+
+use crate::{square::*};
 
 /// A bitboard.
-#[derive(Default, Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Default, Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Bitboard(pub u64);
+
+impl From<Square> for Bitboard {
+    /// The bitboard with a horizontal line on the given rank.
+    #[inline(always)]
+    fn from(value: Square) -> Self {
+        Self(1 << value.to_u8())
+    }
+}
+
+impl From<File> for Bitboard {
+    /// The bitboard with a vertical line on the given file.
+    #[inline(always)]
+    fn from(value: File) -> Self {
+        crate::bb_data::FILES[value as usize]
+    }
+}
+
+impl From<Rank> for Bitboard {
+    #[inline(always)]
+    fn from(value: Rank) -> Self {
+        crate::bb_data::RANKS[value as usize]
+    }
+}
 
 impl Bitboard {
     /// Get the number of set bits in this bitboard.
     #[inline(always)]
-    pub fn popcnt(self) -> u32 {
+    pub const fn popcnt(self) -> u32 {
         self.0.count_ones()
     }
+
+    /// The 4 edges of the board combined.
+    pub const EDGE: Self = crate::bb_data::EDGE;
 }
 
 impl Deref for Bitboard {
@@ -18,6 +46,15 @@ impl Deref for Bitboard {
     #[inline(always)]
     fn deref(&self) -> &Self::Target {
         &self.0
+    }
+}
+
+impl Not for Bitboard {
+    type Output = Self;
+
+    #[inline(always)]
+    fn not(self) -> Self::Output {
+        Self(!self.0)
     }
 }
 
