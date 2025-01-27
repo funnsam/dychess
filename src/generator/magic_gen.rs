@@ -4,6 +4,7 @@ use crate::{bitboard::Bitboard, square::*};
 
 #[derive(Debug)]
 struct Magic {
+    #[allow(unused)]
     mask: Bitboard,
     mul: u64,
     bits: u8,

@@ -17,7 +17,7 @@ pub fn main() {
     let rays = rays_gen::generate_rays(&mut File::create(rays).unwrap());
 
     let pawn = Path::new(&out_dir).join("pawn.rs");
-    pawn_gen::generate_moves(&mut File::create(pawn).unwrap());
+    pawn_gen::generate_moves(&mut File::create(pawn).unwrap(), ranks);
 
     let knight = Path::new(&out_dir).join("knight.rs");
     knight_gen::generate_moves(&mut File::create(knight).unwrap());

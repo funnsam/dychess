@@ -1,3 +1,5 @@
+use core::fmt;
+
 use crate::color::Color;
 
 /// A square on the board.
@@ -195,6 +197,18 @@ impl Rank {
             Color::White => self.down(n),
             Color::Black => self.up(n),
         }
+    }
+}
+
+impl fmt::Display for File {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", (b'A' + *self as u8) as char)
+    }
+}
+
+impl fmt::Display for Rank {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", *self as u8 + 1)
     }
 }
 
