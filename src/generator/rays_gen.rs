@@ -2,12 +2,14 @@ use std::io::Write;
 
 use crate::{bitboard::Bitboard, square::{File, Rank, Square}};
 
-pub fn generate_rays(f: &mut impl Write) {
-    generate_bishop(f);
-    generate_rook(f);
+pub fn generate_rays(f: &mut impl Write) -> [[Bitboard; 64]; 2] {
+    let bishop = generate_bishop(f);
+    let rook = generate_rook(f);
+    [bishop, rook]
 }
 
-pub fn generate_bishop(f: &mut impl Write) {
+pub fn generate_bishop(f: &mut impl Write) -> [Bitboard; 64] {
+    let mut rays = [Bitboard::default(); 64];
     write!(f, "static BISHOP_RAYS: [Bitboard; 64] = [").unwrap();
 
     for rank in Rank::ALL {
@@ -25,13 +27,16 @@ pub fn generate_bishop(f: &mut impl Write) {
             }
 
             write!(f, "Bitboard({}),", bb.0).unwrap();
+            rays[Square::new(file, rank).to_usize()] = bb;
         }
     }
 
     write!(f, "];").unwrap();
+    rays
 }
 
-pub fn generate_rook(f: &mut impl Write) {
+pub fn generate_rook(f: &mut impl Write) -> [Bitboard; 64] {
+    let mut rays = [Bitboard::default(); 64];
     write!(f, "static ROOK_RAYS: [Bitboard; 64] = [").unwrap();
 
     for rank in Rank::ALL {
@@ -51,8 +56,10 @@ pub fn generate_rook(f: &mut impl Write) {
             }
 
             write!(f, "Bitboard({}),", bb.0).unwrap();
+            rays[Square::new(file, rank).to_usize()] = bb;
         }
     }
 
     write!(f, "];").unwrap();
+    rays
 }

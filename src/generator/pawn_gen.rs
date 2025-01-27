@@ -8,14 +8,13 @@ pub fn generate_moves(f: &mut impl Write) {
 }
 
 pub fn generate_advances(f: &mut impl Write) {
-    write!(f, "static PAWN_ADVANCES: [[Bitboard; 64]; 2] = [").unwrap();
+    write!(f, "static ADVANCES: [[Bitboard; 64]; 2] = [").unwrap();
     for color in Color::ALL {
         write!(f, "[").unwrap();
         for rank in Rank::ALL {
-            let fw = rank.forward_wrap(color);
-            let mut bb = Bitboard::from(Square::new(File::A, fw));
-            if fw.invert_black(color) == Rank::_2 {
-                bb |= Square::new(File::A, fw.forward_wrap(color)).into();
+            let mut bb = Bitboard::from(Square::new(File::A, rank.forward_wrap(color, 1)));
+            if rank.invert_if_black(color) == Rank::_2 {
+                bb |= Square::new(File::A, rank.forward_wrap(color, 2)).into();
             }
 
             for _ in 0..8 {
@@ -29,18 +28,18 @@ pub fn generate_advances(f: &mut impl Write) {
 }
 
 pub fn generate_captures(f: &mut impl Write) {
-    write!(f, "static PAWN_CAPTURES: [[Bitboard; 64]; 2] = [").unwrap();
+    write!(f, "static CAPTURES: [[Bitboard; 64]; 2] = [").unwrap();
     for color in Color::ALL {
         write!(f, "[").unwrap();
         for rank in Rank::ALL {
             for file in File::ALL {
-                let fw = rank.forward_wrap(color);
+                let fw = rank.forward_wrap(color, 1);
                 let mut bb = Bitboard::default();
 
-                if let Some(f) = file.left(color) {
+                if let Some(f) = file.left(1) {
                     bb |= Square::new(f, fw).into();
                 }
-                if let Some(f) = file.right(color) {
+                if let Some(f) = file.right(1) {
                     bb |= Square::new(f, fw).into();
                 }
 

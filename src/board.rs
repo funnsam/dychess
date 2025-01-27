@@ -54,6 +54,8 @@ impl Board {
             piece == Piece::Pawn
             && (mov.from().file() as u8).abs_diff(mov.to().file() as u8) == 2 // is 2 sq push
         ).then_some(mov.from().file());
+
+        // TODO: castling
     }
 
     fn erase_piece(&mut self, color: Color, square: Square) -> Option<Piece> {

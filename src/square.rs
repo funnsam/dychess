@@ -74,42 +74,37 @@ impl File {
         Self::A, Self::B, Self::C, Self::D, Self::E, Self::F, Self::G, Self::H
     ];
 
-    /// Get the file on the right and wrap around if overflowed.
+    /// Get the file `n` files to the right, wrapping around if it will overflow.
     #[inline(always)]
-    pub const fn right_wrap(self, color: Color) -> Self {
-        match color {
-            Color::White => Self::ALL[(self as usize + 1) % 8],
-            Color::Black => Self::ALL[(self as usize + 7) % 8],
-        }
+    pub const fn right_wrap(self, n: usize) -> Self {
+        Self::ALL[(self as usize + n) % 8]
     }
 
-    /// Get the file on the right.
+    /// Get the file `n` files to the right;
     #[inline(always)]
-    pub const fn right(self, color: Color) -> Option<Self> {
-        match (self, color) {
-            (Self::H, Color::White) | (Self::A, Color::Black) => None,
-            (_, Color::White) => Some(Self::ALL[self as usize + 1]),
-            (_, Color::Black) => Some(Self::ALL[self as usize - 1]),
+    pub const fn right(self, n: usize) -> Option<Self> {
+        let idx = self as usize + n;
+        if idx >= 8 {
+            return None;
         }
+
+        Some(Self::ALL[idx])
     }
 
-    /// Get the file on the left and wrap around if overflowed.
+    /// Get the file `n` files to the left, wrapping around if it will underflow.
     #[inline(always)]
-    pub const fn left_wrap(self, color: Color) -> Self {
-        match color {
-            Color::White => Self::ALL[(self as usize + 7) % 8],
-            Color::Black => Self::ALL[(self as usize + 1) % 8],
-        }
+    pub const fn left_wrap(self, n: usize) -> Self {
+        Self::ALL[(self as usize + 8 - n % 8) % 8]
     }
 
-    /// Get the file on the left.
+    /// Get the file `n` files to the left.
     #[inline(always)]
-    pub const fn left(self, color: Color) -> Option<Self> {
-        match (self, color) {
-            (Self::A, Color::White) | (Self::H, Color::Black) => None,
-            (_, Color::White) => Some(Self::ALL[self as usize - 1]),
-            (_, Color::Black) => Some(Self::ALL[self as usize + 1]),
+    pub const fn left(self, n: usize) -> Option<Self> {
+        if (self as usize) < n {
+            return None;
         }
+
+        Some(Self::ALL[self as usize - n])
     }
 }
 
@@ -120,7 +115,7 @@ impl Rank {
 
     /// Calls [Self::invert] if `color` is black, otherwise returns `self`.
     #[inline(always)]
-    pub const fn invert_black(self, color: Color) -> Self {
+    pub const fn invert_if_black(self, color: Color) -> Self {
         match color {
             Color::White => self,
             Color::Black => self.invert(),
@@ -133,41 +128,72 @@ impl Rank {
         Self::ALL[self as usize ^ 7]
     }
 
+    /// Get the rank `n` ranks up, wrapping around if it will overflow.
+    #[inline(always)]
+    pub const fn up_wrap(self, n: usize) -> Self {
+        Self::ALL[(self as usize + n) % 8]
+    }
+
+    /// Get the rank `n` ranks up.
+    #[inline(always)]
+    pub const fn up(self, n: usize) -> Option<Self> {
+        let idx = self as usize + n;
+        if idx >= 8 {
+            return None;
+        }
+
+        Some(Self::ALL[idx])
+    }
+
+    /// Get the rank `n` ranks down, wrapping around if it will underflow.
+    #[inline(always)]
+    pub const fn down_wrap(self, n: usize) -> Self {
+        Self::ALL[(self as usize + 8 - n % 8) % 8]
+    }
+
+    /// Get the rank `n` ranks down.
+    #[inline(always)]
+    pub const fn down(self, n: usize) -> Option<Self> {
+        if (self as usize) < n {
+            return None;
+        }
+
+        Some(Self::ALL[self as usize - n])
+    }
+
     /// Get the rank forward and wrap around if overflowed.
     #[inline(always)]
-    pub const fn forward_wrap(self, color: Color) -> Self {
+    pub const fn forward_wrap(self, color: Color, n: usize) -> Self {
         match color {
-            Color::White => Self::ALL[(self as usize + 1) % 8],
-            Color::Black => Self::ALL[(self as usize + 7) % 8],
+            Color::White => self.up_wrap(n),
+            Color::Black => self.down_wrap(n),
         }
     }
 
     /// Get the rank forward.
     #[inline(always)]
-    pub const fn forward(self, color: Color) -> Option<Self> {
-        match (self, color) {
-            (Self::_8, Color::White) | (Self::_1, Color::Black) => None,
-            (_, Color::White) => Some(Self::ALL[self as usize + 1]),
-            (_, Color::Black) => Some(Self::ALL[self as usize - 1]),
+    pub const fn forward(self, color: Color, n: usize) -> Option<Self> {
+        match color {
+            Color::White => self.up(n),
+            Color::Black => self.down(n),
         }
     }
 
     /// Get the rank backward and wrap around if overflowed.
     #[inline(always)]
-    pub const fn backward_wrap(self, color: Color) -> Self {
+    pub const fn backward_wrap(self, color: Color, n: usize) -> Self {
         match color {
-            Color::White => Self::ALL[(self as usize + 7) % 8],
-            Color::Black => Self::ALL[(self as usize + 1) % 8],
+            Color::White => self.down_wrap(n),
+            Color::Black => self.up_wrap(n),
         }
     }
 
     /// Get the rank backward.
     #[inline(always)]
-    pub const fn backward(self, color: Color) -> Option<Self> {
-        match (self, color) {
-            (Self::_1, Color::White) | (Self::_8, Color::Black) => None,
-            (_, Color::White) => Some(Self::ALL[self as usize - 1]),
-            (_, Color::Black) => Some(Self::ALL[self as usize + 1]),
+    pub const fn backward(self, color: Color, n: usize) -> Option<Self> {
+        match color {
+            Color::White => self.down(n),
+            Color::Black => self.up(n),
         }
     }
 }
@@ -244,4 +270,15 @@ impl Square {
     pub const H6: Self = Self::new(File::H, Rank::_6);
     pub const H7: Self = Self::new(File::H, Rank::_7);
     pub const H8: Self = Self::new(File::H, Rank::_8);
+
+    pub const ALL: [Self; 64] = [
+        Self::A1, Self::A2, Self::A3, Self::A4, Self::A5, Self::A6, Self::A7, Self::A8,
+        Self::B1, Self::B2, Self::B3, Self::B4, Self::B5, Self::B6, Self::B7, Self::B8,
+        Self::C1, Self::C2, Self::C3, Self::C4, Self::C5, Self::C6, Self::C7, Self::C8,
+        Self::D1, Self::D2, Self::D3, Self::D4, Self::D5, Self::D6, Self::D7, Self::D8,
+        Self::E1, Self::E2, Self::E3, Self::E4, Self::E5, Self::E6, Self::E7, Self::E8,
+        Self::F1, Self::F2, Self::F3, Self::F4, Self::F5, Self::F6, Self::F7, Self::F8,
+        Self::G1, Self::G2, Self::G3, Self::G4, Self::G5, Self::G6, Self::G7, Self::G8,
+        Self::H1, Self::H2, Self::H3, Self::H4, Self::H5, Self::H6, Self::H7, Self::H8,
+    ];
 }

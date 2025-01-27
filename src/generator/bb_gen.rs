@@ -2,13 +2,13 @@ use std::io::Write;
 
 use crate::{bitboard::Bitboard, square::{File, Rank, Square}};
 
-pub fn generate_data(f: &mut impl Write) {
-    generate_edge(f);
+pub fn generate_data(f: &mut impl Write) -> Bitboard {
     generate_files(f);
     generate_ranks(f);
+    generate_edge(f)
 }
 
-pub fn generate_edge(f: &mut impl Write) {
+pub fn generate_edge(f: &mut impl Write) -> Bitboard {
     let mut edge = Bitboard::default();
 
     for rank in Rank::ALL {
@@ -21,6 +21,7 @@ pub fn generate_edge(f: &mut impl Write) {
     }
 
     write!(f, "pub const EDGE: Bitboard = Bitboard({});", edge.0).unwrap();
+    edge
 }
 
 pub fn generate_files(f: &mut impl Write) {
