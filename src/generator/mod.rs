@@ -10,6 +10,9 @@ mod rays_gen;
 pub fn main() {
     let out_dir = env::var("OUT_DIR").unwrap();
 
+    let bitboard = Path::new(&out_dir).join("bitboard.rs");
+    let (files, ranks) = bb_gen::generate_data(&mut File::create(bitboard).unwrap());
+
     let rays = Path::new(&out_dir).join("rays.rs");
     let rays = rays_gen::generate_rays(&mut File::create(rays).unwrap());
 
@@ -22,9 +25,6 @@ pub fn main() {
     let king = Path::new(&out_dir).join("king.rs");
     king_gen::generate_tables(&mut File::create(king).unwrap());
 
-    let bitboard = Path::new(&out_dir).join("bitboard.rs");
-    let edges = bb_gen::generate_data(&mut File::create(bitboard).unwrap());
-
     let magic = Path::new(&out_dir).join("magic.rs");
-    magic_gen::generate_tables(&mut File::create(magic).unwrap(), edges, rays);
+    magic_gen::generate_tables(&mut File::create(magic).unwrap(), files, ranks, rays);
 }

@@ -70,7 +70,7 @@ impl BitAnd for Bitboard {
 impl BitAndAssign for Bitboard {
     #[inline(always)]
     fn bitand_assign(&mut self, rhs: Self) {
-        self.0 ^= rhs.0
+        self.0 &= rhs.0
     }
 }
 

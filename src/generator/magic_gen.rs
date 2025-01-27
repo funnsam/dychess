@@ -10,9 +10,9 @@ struct Magic {
 
 type Table = Vec<(Bitboard, Bitboard)>;
 
-pub fn generate_tables(f: &mut impl Write, edges: Bitboard, masks: [[Bitboard; 64]; 2]) {
-    gen(f, "BISHOP", edges, masks[0], bishop_block);
-    gen(f, "ROOK", edges, masks[1], rook_block);
+pub fn generate_tables(f: &mut impl Write, files: [Bitboard; 8], ranks: [Bitboard; 8], masks: [[Bitboard; 64]; 2]) {
+    gen(f, "BISHOP", files, ranks, masks[0], bishop_block);
+    gen(f, "ROOK", files, ranks, masks[1], rook_block);
 }
 
 fn bishop_block(blockers: Bitboard, sq: Square) -> Bitboard {
@@ -81,10 +81,21 @@ fn rook_block(blockers: Bitboard, sq: Square) -> Bitboard {
     res
 }
 
-pub fn gen<F: Fn(Bitboard, Square) -> Bitboard>(f: &mut impl Write, name: &str, edges: Bitboard, masks: [Bitboard; 64], block: F) {
+pub fn gen<F: Fn(Bitboard, Square) -> Bitboard>(
+    f: &mut impl Write,
+    name: &str,
+    files: [Bitboard; 8],
+    ranks: [Bitboard; 8],
+    masks: [Bitboard; 64],
+    block: F,
+) {
     write!(f, "static {name}_MAGICS: [(Magic, &[Bitboard]); 64] = [").unwrap();
-    for (mask, sq) in masks.into_iter().zip(Square::ALL) {
-        println!("cargo::warning={name} {mask:?}");
+    for (mut mask, sq) in masks.into_iter().zip(Square::ALL) {
+        if sq.file() != File::A { mask &= !files[0] };
+        if sq.file() != File::H { mask &= !files[7] };
+        if sq.rank() != Rank::_1 { mask &= !ranks[0] };
+        if sq.rank() != Rank::_8 { mask &= !ranks[7] };
+
         let (bbs, magic) = find_magic(mask, gen_blocker_tb(mask, sq, &block));
 
         write!(f, "({magic:?}, &[").unwrap();
@@ -121,18 +132,21 @@ fn find_magic(mask: Bitboard, table: Table) -> (Vec<Bitboard>, Magic) {
             continue;
         }
 
-        let mut used = vec![Bitboard::default(); 4096.max(1 << bits)];
+        let mut used = vec![Bitboard::default(); 1 << bits];
+        let mut max_idx = 0;
 
         for (blockers, movable) in &table {
             let idx = to_index(*blockers, &trial_magic);
 
             if used[idx] == Bitboard::default() {
                 used[idx] = *movable;
+                max_idx = max_idx.max(idx);
             } else if used[idx] != *movable {
                 continue 'find_magic;
             }
         }
 
+        used.drain(max_idx..);
         return (used, trial_magic);
     }
 }

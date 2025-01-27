@@ -16,14 +16,20 @@ pub fn generate_bishop(f: &mut impl Write) -> [Bitboard; 64] {
         for file in File::ALL {
             let mut bb = Bitboard::default();
 
-            for rank2 in Rank::ALL {
-                for file2 in File::ALL {
-                    if (rank2 as i8 - rank as i8).abs() == (file2 as i8 - file as i8).abs()
-                        && (rank != rank2 && file != file2)
-                    {
-                        bb |= Square::new(file2, rank2).into();
-                    }
-                }
+            for (f, r) in File::ALL[..file as usize].into_iter().rev().zip(Rank::ALL[..rank as usize].into_iter().rev()) {
+                bb |= Square::new(*f, *r).into();
+            }
+
+            for (f, r) in File::ALL[..file as usize].into_iter().rev().zip(Rank::ALL[rank as usize..].into_iter().skip(1)) {
+                bb |= Square::new(*f, *r).into();
+            }
+
+            for (f, r) in File::ALL[file as usize..].into_iter().skip(1).zip(Rank::ALL[..rank as usize].into_iter().rev()) {
+                bb |= Square::new(*f, *r).into();
+            }
+
+            for (f, r) in File::ALL[file as usize..].into_iter().skip(1).zip(Rank::ALL[rank as usize..].into_iter().skip(1)) {
+                bb |= Square::new(*f, *r).into();
             }
 
             write!(f, "Bitboard({}),", bb.0).unwrap();
