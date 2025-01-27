@@ -4,6 +4,7 @@ use crate::{bitboard::Bitboard, square::*};
 
 #[derive(Debug)]
 struct Magic {
+    mask: Bitboard,
     mul: u64,
     bits: u8,
 }
@@ -89,7 +90,7 @@ pub fn gen<F: Fn(Bitboard, Square) -> Bitboard>(
     masks: [Bitboard; 64],
     block: F,
 ) {
-    write!(f, "static {name}_MAGICS: [(Magic, &[Bitboard]); 64] = [").unwrap();
+    write!(f, "pub(crate) static {name}: [(Magic, &[Bitboard]); 64] = [").unwrap();
     for (mut mask, sq) in masks.into_iter().zip(Square::ALL) {
         if sq.file() != File::A { mask &= !files[0] };
         if sq.file() != File::H { mask &= !files[7] };
@@ -124,6 +125,7 @@ fn find_magic(mask: Bitboard, table: Table) -> (Vec<Bitboard>, Magic) {
     'find_magic: loop {
         let trial_mul = random_u64_few_bits();
         let trial_magic = Magic {
+            mask,
             mul: trial_mul,
             bits,
         };

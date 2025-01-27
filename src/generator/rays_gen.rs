@@ -10,7 +10,7 @@ pub fn generate_rays(f: &mut impl Write) -> [[Bitboard; 64]; 2] {
 
 pub fn generate_bishop(f: &mut impl Write) -> [Bitboard; 64] {
     let mut rays = [Bitboard::default(); 64];
-    write!(f, "static BISHOP_RAYS: [Bitboard; 64] = [").unwrap();
+    write!(f, "pub(crate) static BISHOP: [Bitboard; 64] = [").unwrap();
 
     for rank in Rank::ALL {
         for file in File::ALL {
@@ -43,7 +43,7 @@ pub fn generate_bishop(f: &mut impl Write) -> [Bitboard; 64] {
 
 pub fn generate_rook(f: &mut impl Write) -> [Bitboard; 64] {
     let mut rays = [Bitboard::default(); 64];
-    write!(f, "static ROOK_RAYS: [Bitboard; 64] = [").unwrap();
+    write!(f, "pub(crate) static ROOK: [Bitboard; 64] = [").unwrap();
 
     for rank in Rank::ALL {
         for file in File::ALL {
