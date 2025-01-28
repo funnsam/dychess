@@ -1,7 +1,8 @@
 use crate::prelude::*;
 
 pub mod fen;
-mod util;
+pub mod movegen;
+pub mod util;
 
 /// A chess board.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -20,6 +21,15 @@ pub struct Board {
     en_passant: Option<File>,
 
     chess960: bool,
+}
+
+impl Default for Board {
+    fn default() -> Self {
+        Board::from_fen(
+            false,
+            "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        ).expect("valid position")
+    }
 }
 
 impl Board {

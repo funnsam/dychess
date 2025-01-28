@@ -1,6 +1,6 @@
 use core::ops::{BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, BitXorAssign, Deref, Not};
 
-use crate::{square::*};
+use crate::square::*;
 
 /// A bitboard.
 #[derive(Default, Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -29,7 +29,32 @@ impl From<Rank> for Bitboard {
     }
 }
 
+impl TryFrom<Bitboard> for Square {
+    type Error = u32;
+
+    fn try_from(bb: Bitboard) -> Result<Self, Self::Error> {
+        let popcnt = bb.popcnt();
+        if popcnt != 1 { return Err(popcnt) };
+
+        Ok(bb.first_square())
+    }
+}
+
 impl Bitboard {
+    /// Get if this bitboard is empty.
+    #[inline(always)]
+    pub const fn is_empty(self) -> bool {
+        self.0 == 0
+    }
+
+    /// Get the first square in this bitboard, or [None] if it is empty.
+    #[inline(always)]
+    pub const fn first_square(self) -> Option<Square> {
+        if self.is_empty() { return None };
+
+        Some(Square::from_index(self.0.trailing_zeros() as _))
+    }
+
     /// Get the number of set bits in this bitboard.
     #[inline(always)]
     pub const fn popcnt(self) -> u32 {
@@ -105,3 +130,52 @@ impl BitXorAssign for Bitboard {
         self.0 ^= rhs.0
     }
 }
+
+impl IntoIterator for Bitboard {
+    type Item = Square;
+    type IntoIter = BitboardIter;
+
+    fn into_iter(self) -> Self::IntoIter {
+        BitboardIter {
+            remaining: self,
+            at: 0,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, Hash)]
+pub struct BitboardIter {
+    remaining: Bitboard,
+    at: usize,
+}
+
+impl BitboardIter {
+    /// Get whether the iterator is empty or not. This is a faster way to do `self.len() == 0`.
+    #[inline(always)]
+    pub fn had_emptied(&self) -> bool {
+        self.remaining.0 == 0
+    }
+}
+
+impl Iterator for BitboardIter {
+    type Item = Square;
+
+    #[inline(always)]
+    fn next(&mut self) -> Option<Self::Item> {
+        (!self.had_emptied()).then(|| {
+            let tz = self.remaining.0.trailing_zeros();
+            self.remaining.0 >>= tz + 1;
+            self.at += tz as usize + 1;
+            Square::ALL[self.at - 1]
+        })
+    }
+
+    #[inline(always)]
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let popcnt = self.remaining.popcnt() as usize;
+        (popcnt, Some(popcnt))
+    }
+}
+
+impl core::iter::FusedIterator for BitboardIter {}
+impl ExactSizeIterator for BitboardIter {}

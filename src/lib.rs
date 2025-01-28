@@ -16,11 +16,11 @@ pub mod queen;
 pub mod king;
 
 pub mod prelude {
+    pub use crate::bitboard::*;
+    pub use crate::board::*;
     pub use crate::castle_rights::*;
     pub use crate::chess_move::*;
     pub use crate::color::*;
-    pub use crate::bitboard::*;
-    pub use crate::board::*;
     pub use crate::piece::*;
     pub use crate::square::*;
     pub use crate::{pawn, knight, bishop, rook, queen, king};

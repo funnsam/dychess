@@ -47,6 +47,7 @@ impl Board {
 
         loop {
             match fen.next() {
+                // TODO: chess960 castling
                 Some('K') => board.castle_rights[0].allow_king_side(),
                 Some('Q') => board.castle_rights[0].allow_queen_side(),
                 Some('k') => board.castle_rights[1].allow_king_side(),

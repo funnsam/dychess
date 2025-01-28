@@ -18,6 +18,10 @@ impl Board {
         }
     }
 
+    /// Get the side to move.
+    #[inline(always)]
+    pub fn side_to_move(&self) -> Color { self.side_to_move }
+
     /// Get the piece and color on a given square.
     #[inline(always)]
     pub fn piece_and_color_on(&self, square: Square) -> Option<(Piece, Color)> {
@@ -41,9 +45,7 @@ impl Board {
 
     /// All pieces combined in a bitboard.
     #[inline(always)]
-    pub fn combined(&self) -> Bitboard {
-        self.colors[0] | self.colors[1]
-    }
+    pub fn combined(&self) -> Bitboard { self.colors[0] | self.colors[1] }
 
     /// All pieces that belongs to the specified color.
     #[inline(always)]
@@ -56,6 +58,14 @@ impl Board {
     /// All pieces that belongs to black.
     #[inline(always)]
     pub fn black_pieces(&self) -> Bitboard { self.color_combined(Color::Black) }
+
+    /// All pieces that belongs to the side to move.
+    #[inline(always)]
+    pub fn our_pieces(&self) -> Bitboard { self.color_combined(self.side_to_move()) }
+
+    /// All pieces that belongs to the side not to move.
+    #[inline(always)]
+    pub fn their_pieces(&self) -> Bitboard { self.color_combined(!self.side_to_move()) }
 
     /// All squares with the specified piece.
     #[inline(always)]
@@ -84,4 +94,32 @@ impl Board {
     /// All kings on the board.
     #[inline(always)]
     pub fn kings(&self) -> Bitboard { self.piece_combined(Piece::King) }
+
+    /// All of our pawns on the board.
+    #[inline(always)]
+    pub fn our_pawns(&self) -> Bitboard { self.piece_combined(Piece::Pawn) & self.our_pieces() }
+
+    /// All of our knights on the board.
+    #[inline(always)]
+    pub fn our_knights(&self) -> Bitboard { self.piece_combined(Piece::Knight) & self.our_pieces() }
+
+    /// All of our bishops on the board.
+    #[inline(always)]
+    pub fn our_bishops(&self) -> Bitboard { self.piece_combined(Piece::Bishop) & self.our_pieces() }
+
+    /// All of our rooks on the board.
+    #[inline(always)]
+    pub fn our_rooks(&self) -> Bitboard { self.piece_combined(Piece::Rook) & self.our_pieces() }
+
+    /// All of our queens on the board.
+    #[inline(always)]
+    pub fn our_queens(&self) -> Bitboard { self.piece_combined(Piece::Queen) & self.our_pieces() }
+
+    /// Our king on the board.
+    #[inline(always)]
+    pub fn our_king(&self) -> Square {
+        (self.piece_combined(Piece::King) & self.our_pieces())
+            .try_into()
+            .expect("there should only be a king for each side")
+    }
 }

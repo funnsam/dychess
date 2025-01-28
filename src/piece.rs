@@ -8,4 +8,9 @@ impl Piece {
     pub const ALL: [Self; 6] = [
         Self::Pawn, Self::Knight, Self::Bishop, Self::Rook, Self::Queen, Self::King
     ];
+
+    /// All of the pieces that a pawn can promote to with ascending indices.
+    pub const PROMOTE_TO: [Self; 4] = [
+        Self::Knight, Self::Bishop, Self::Rook, Self::Queen
+    ];
 }
