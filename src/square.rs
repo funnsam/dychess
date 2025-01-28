@@ -3,7 +3,7 @@ use core::fmt;
 use crate::color::Color;
 
 /// A square on the board.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Default, Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Square(u8);
 
 impl Square {
@@ -200,9 +200,15 @@ impl Rank {
     }
 }
 
+impl fmt::Display for Square {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}{}", self.file(), self.rank())
+    }
+}
+
 impl fmt::Display for File {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", (b'A' + *self as u8) as char)
+        write!(f, "{}", (b'a' + *self as u8) as char)
     }
 }
 

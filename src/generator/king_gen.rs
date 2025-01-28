@@ -14,12 +14,12 @@ fn generate_moves(f: &mut impl Write) {
         for file in File::ALL {
             let mut bb = Bitboard::default();
 
-            for r in Rank::ALL.into_iter().skip((rank as usize).saturating_sub(1)) {
-                for f in File::ALL.into_iter().skip((file as usize).saturating_sub(1)) {
-                    bb |= Square::new(f, r).into();
-                    if file.right(1) == Some(f) { break };
+            for r in &Rank::ALL[(rank as usize).saturating_sub(1)..(rank as usize + 2).min(8)] {
+                for f in &File::ALL[(file as usize).saturating_sub(1)..(file as usize + 2).min(8)] {
+                    if *r != rank || *f != file {
+                        bb |= Square::new(*f, *r).into();
+                    }
                 }
-                if rank.down(1) == Some(r) { break };
             }
 
             write!(f, "Bitboard({}),", bb.0).unwrap();

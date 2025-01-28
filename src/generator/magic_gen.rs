@@ -149,7 +149,7 @@ fn find_magic(mask: Bitboard, table: Table) -> (Vec<Bitboard>, Magic) {
             }
         }
 
-        used.drain(max_idx..);
+        used.drain(max_idx + 1..);
         return (used, trial_magic);
     }
 }

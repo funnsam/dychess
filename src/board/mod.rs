@@ -33,6 +33,12 @@ impl Default for Board {
 }
 
 impl Board {
+    pub fn copy_make_move(&self, mov: Move) -> Self {
+        let mut after = self.clone();
+        after.make_move(mov);
+        after
+    }
+
     pub fn make_move(&mut self, mov: Move) {
         let move_bb = Bitboard::from(mov.from()) | mov.to().into();
         let piece = self.erase_piece(self.side_to_move, mov.from())
@@ -66,8 +72,9 @@ impl Board {
             _ => {},
         }
 
-        self.en_passant = (piece == Piece::Pawn && (move_bb & pawn::DOUBLE_PUSH) == move_bb)
+        self.en_passant = (piece == Piece::Pawn && (move_bb & pawn::double_pushes(self.side_to_move)) == move_bb)
             .then_some(mov.from().file());
+        self.side_to_move = !self.side_to_move;
     }
 
     fn place_piece(&mut self, color: Color, square: Square, piece: Piece) -> Option<(Piece, Color)> {

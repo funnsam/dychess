@@ -1,11 +1,9 @@
+use core::fmt;
+
 use crate::{piece::Piece, square::Square};
 
-pub struct Move {
-    from: Square,
-    to: Square,
-    /// A pawn if none.
-    promotion: Piece,
-}
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct Move(u16);
 
 impl Move {
     /// Create a new move.
@@ -22,17 +20,35 @@ impl Move {
     /// ```
     #[inline(always)]
     pub fn new(from: Square, to: Square, promotion: Option<Piece>) -> Self {
-        Self { from, to, promotion: promotion.unwrap_or(Piece::Pawn) }
+        let promotion = promotion.unwrap_or(Piece::Pawn);
+
+        Self(((promotion as u16) << 12) | ((to.to_u8() as u16) << 6) | (from.to_u8() as u16))
     }
 
     #[inline(always)]
-    pub fn from(&self) -> Square { self.from }
+    pub fn from(&self) -> Square { Square::from_index(self.0 as u8 & 63) }
 
     #[inline(always)]
-    pub fn to(&self) -> Square { self.to }
+    pub fn to(&self) -> Square { Square::from_index((self.0 >> 6) as u8 & 63) }
 
     #[inline(always)]
     pub fn promotion(&self) -> Option<Piece> {
-        (self.promotion != Piece::Pawn).then_some(self.promotion)
+        let promotion = Piece::ALL[self.0 as usize >> 12];
+
+        (promotion != Piece::Pawn).then_some(promotion)
+    }
+}
+
+impl fmt::Display for Move {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}{}{}", self.from(), self.to(), match self.promotion() {
+            Some(Piece::Pawn) => "p",
+            Some(Piece::Knight) => "n",
+            Some(Piece::Bishop) => "b",
+            Some(Piece::Rook) => "r",
+            Some(Piece::Queen) => "q",
+            Some(Piece::King) => "k",
+            None => "",
+        })
     }
 }

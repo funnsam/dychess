@@ -8,6 +8,7 @@ pub struct MoveGen<'a> {
 
     cur_piece_targets: Bitboard,
     cur_piece_sq: Square,
+    cur_promote_to: u8,
 
     pieces: BitboardIter,
 }
@@ -16,28 +17,24 @@ impl Board {
     /// Generate pseudo-legal moves that can be iterated with a list of moves that are prioritized
     /// over other moves.
     pub fn generate_moves<'a>(&'a self, priority: &'a [Move]) -> MoveGen<'a> {
-        let mut to = [Bitboard::default(); 64];
-
-        let mut pieces = self.our_pieces().into_iter();
-        let cur_piece_sq = pieces.next().expect("expected at least 1 piece avalible");
-
         MoveGen {
             board: self,
             priority,
             priority_at: 0,
 
-            cur_piece_targets: self.piece_targets(cur_piece_sq),
-            cur_piece_sq,
+            cur_piece_targets: Bitboard::default(),
+            cur_piece_sq: Square::default(),
+            cur_promote_to: 0,
 
-            pieces,
+            pieces: self.our_pieces().into_iter(),
         }
     }
 
-    fn piece_targets(&self, sq: Square) -> Bitboard {
-        match self.piece_on(sq).unwrap() {
+    fn piece_targets(&self, piece: Piece, sq: Square) -> Bitboard {
+        (match piece {
             Piece::Pawn => {
-                // TODO: promotion, ep, blocked double
-                let advances = pawn::advances(self.side_to_move(), sq);
+                // TODO: ep
+                let advances = pawn::advances(self.side_to_move(), sq, self.combined());
                 let captures = pawn::captures(self.side_to_move(), sq);
                 advances | (captures & self.their_pieces())
             },
@@ -49,7 +46,7 @@ impl Board {
                 // TODO: castling
                 king::moves(sq)
             },
-        } & !self.our_pieces();
+        }) & !self.our_pieces()
     }
 }
 
@@ -59,14 +56,47 @@ impl<'a> MoveGen<'a> {
             let candidate = self.priority[self.priority_at];
             self.priority_at += 1;
 
-            // let c_idx = candidate.from().to_usize();
-            // return (!(self.to[c_idx] & candidate.to().into()).is_empty())
-            //     .then(|| {
-            //         self.to[c_idx] &= !Bitboard::from(candidate.to());
-            //         candidate
-            //     })
-            //     .ok_or(())
-            //     .into();
+            return if let Some((piece, color)) = self.board.piece_and_color_on(candidate.from()) {
+                if color != self.board.side_to_move { return Some(Err(())) };
+
+                let targets = self.board.piece_targets(piece, candidate.from());
+
+                if !(targets & candidate.to().into()).is_empty() {
+                    Some(Ok(candidate))
+                } else {
+                    Some(Err(()))
+                }
+            } else {
+                Some(Err(()))
+            };
+        }
+
+        while self.cur_piece_targets.is_empty() {
+            let square = self.pieces.next()?;
+            println!("{square} {:?}", self.board.combined());
+            let piece = self.board.piece_on(square).unwrap();
+
+            let piece_targets = self.board.piece_targets(piece, square);
+            self.cur_promote_to = (
+                piece == Piece::Pawn
+                && !(piece_targets & pawn::PROMOTION_SQUARES).is_empty()
+            ) as u8;
+            self.cur_piece_targets = piece_targets;
+            self.cur_piece_sq = square;
+        }
+
+        let to_sq = self.cur_piece_targets.first_square().unwrap();
+
+        if self.cur_promote_to == 0 {
+            self.cur_piece_targets ^= to_sq.into();
+            Some(Ok(Move::new(self.cur_piece_sq, to_sq, None)))
+        } else {
+            let promotion = Piece::ALL[self.cur_promote_to as usize];
+            if promotion == Piece::Queen {
+                self.cur_piece_targets ^= to_sq.into();
+            }
+
+            Some(Ok(Move::new(self.cur_piece_sq, to_sq, Some(promotion))))
         }
     }
 }

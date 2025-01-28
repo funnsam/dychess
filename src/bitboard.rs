@@ -18,14 +18,14 @@ impl From<File> for Bitboard {
     /// The bitboard with a vertical line on the given file.
     #[inline(always)]
     fn from(value: File) -> Self {
-        crate::bb_data::FILES[value as usize]
+        Self::FILES[value as usize]
     }
 }
 
 impl From<Rank> for Bitboard {
     #[inline(always)]
     fn from(value: Rank) -> Self {
-        crate::bb_data::RANKS[value as usize]
+        Self::RANKS[value as usize]
     }
 }
 
@@ -36,7 +36,7 @@ impl TryFrom<Bitboard> for Square {
         let popcnt = bb.popcnt();
         if popcnt != 1 { return Err(popcnt) };
 
-        Ok(bb.first_square())
+        Ok(bb.first_square().unwrap())
     }
 }
 
@@ -63,6 +63,12 @@ impl Bitboard {
 
     /// The 4 edges of the board combined.
     pub const EDGE: Self = crate::bb_data::EDGE;
+
+    /// Each file on the board.
+    pub const FILES: [Self; 8] = crate::bb_data::FILES;
+
+    /// Each rank on the board.
+    pub const RANKS: [Self; 8] = crate::bb_data::RANKS;
 }
 
 impl Deref for Bitboard {
