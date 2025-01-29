@@ -52,31 +52,57 @@ impl Board {
                 }
             },
             Piece::Rook => {
-                if (mov.from() == Square::A1 && self.side_to_move == Color::White) ||
-                    (mov.from() == Square::A8 && self.side_to_move == Color::Black)
+                if (mov.from() == Square::A1 && self.side_to_move() == Color::White) ||
+                    (mov.from() == Square::A8 && self.side_to_move() == Color::Black)
                 {
-                    self.castle_rights[self.side_to_move as usize].disallow_queen_side()
-                } else if (mov.from() == Square::H1 && self.side_to_move == Color::White) ||
-                    (mov.from() == Square::H8 && self.side_to_move == Color::Black)
+                    self.castle_rights[self.side_to_move() as usize].disallow_queen_side()
+                } else if (mov.from() == Square::H1 && self.side_to_move() == Color::White) ||
+                    (mov.from() == Square::H8 && self.side_to_move() == Color::Black)
                 {
-                    self.castle_rights[self.side_to_move as usize].disallow_king_side()
+                    self.castle_rights[self.side_to_move() as usize].disallow_king_side()
                 }
             },
             Piece::King => {
-                self.castle_rights[self.side_to_move as usize].disallow_castling();
+                self.castle_rights[self.side_to_move() as usize].disallow_castling();
 
-                if (self.chess960 && capture == Some((Piece::Rook, self.side_to_move)))
-                    || (!self.chess960 && (move_bb & king::CASTLE_MOVE) == move_bb)
-                {
-                    todo!("castling");
+                if self.chess960 && capture == Some((Piece::Rook, self.side_to_move())) {
+                    todo!("chess960 castling");
+                }
+
+                if !self.chess960 && (move_bb & king::CASTLE_MOVE) == move_bb {
+                    const ROOK_AT: [File; 8] = [
+                        File::A,
+                        File::A,
+                        File::A,
+                        File::A,
+                        File::H,
+                        File::H,
+                        File::H,
+                        File::H,
+                    ];
+                    const ROOK_TO: [File; 8] = [
+                        File::D,
+                        File::D,
+                        File::D,
+                        File::D,
+                        File::F,
+                        File::F,
+                        File::F,
+                        File::F,
+                    ];
+
+                    let rook_at = Square::new(ROOK_AT[mov.to().file() as usize], mov.to().rank());
+                    let rook_to = Square::new(ROOK_TO[mov.to().file() as usize], mov.to().rank());
+                    self.erase_piece(rook_at);
+                    self.place_piece(self.side_to_move(), rook_to, Piece::Rook);
                 }
             },
             _ => {},
         }
 
-        self.en_passant = (piece == Piece::Pawn && (move_bb & pawn::double_pushes(self.side_to_move)) == move_bb)
+        self.en_passant = (piece == Piece::Pawn && (move_bb & pawn::double_pushes(self.side_to_move())) == move_bb)
             .then_some(mov.from().file());
-        self.side_to_move = !self.side_to_move;
+        self.side_to_move = !self.side_to_move();
     }
 
     fn place_piece(&mut self, color: Color, square: Square, piece: Piece) -> Option<(Piece, Color)> {
@@ -107,8 +133,8 @@ impl Board {
         piece
     }
 
-    pub(crate) fn piece_targets(&self, color: Color, piece: Piece, sq: Square) -> Bitboard {
-        (match piece {
+    pub(crate) fn piece_targets(&self, castle: bool, color: Color, piece: Piece, sq: Square) -> Bitboard {
+        match piece {
             Piece::Pawn => {
                 let advances = pawn::advances(color, sq, self.combined());
                 let captures = pawn::captures(color, sq);
@@ -119,10 +145,31 @@ impl Board {
             Piece::Rook => rook::moves(sq, self.combined()),
             Piece::Queen => queen::moves(sq, self.combined()),
             Piece::King => {
-                // TODO: castling
-                king::moves(sq)
+                let mut moves = king::moves(sq);
+
+                if castle && self.castle_rights[color as usize].king_side() {
+                    if let Some(ks_rook) = (self.rooks_of(color) & self.castle_rights[color as usize].king_side_file().into() & color.back_rank().into()).first_square() {
+                        if (king::castle_clearance(color, sq.file(), ks_rook.file()) & self.combined()).is_empty()
+                            && (king::castle_path(color, sq.file(), ks_rook.file()) & self.side_attack_def(!color)).is_empty()
+                        {
+                            moves |= Bitboard::from(if !self.chess960 { Square::new(File::G, sq.rank()) } else { ks_rook })
+                        }
+                    }
+                }
+
+                if castle && self.castle_rights[color as usize].queen_side() {
+                    if let Some(qs_rook) = (self.rooks_of(color) & self.castle_rights[color as usize].queen_side_file().into() & color.back_rank().into()).first_square() {
+                        if (king::castle_clearance(color, sq.file(), qs_rook.file()) & self.combined()).is_empty()
+                            && (king::castle_path(color, sq.file(), qs_rook.file()) & self.side_attack_def(!color)).is_empty()
+                        {
+                            moves |= Bitboard::from(if !self.chess960 { Square::new(File::C, sq.rank()) } else { qs_rook })
+                        }
+                    }
+                }
+
+                moves
             },
-        }) & !self.color_combined(color)
+        }
     }
 
     fn ep_square(&self, color: Color) -> Bitboard {
@@ -156,7 +203,7 @@ impl Board {
         let mut atkdef = Bitboard::default();
         for sq in self.color_combined(color) {
             let piece = self.piece_on(sq).unwrap();
-            atkdef |= self.piece_targets(color, piece, sq);
+            atkdef |= self.piece_targets(false, color, piece, sq);
         }
         atkdef
     }

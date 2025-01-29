@@ -1,6 +1,6 @@
 use core::fmt;
 
-use crate::color::Color;
+use crate::{bitboard::Bitboard, color::Color};
 
 /// A square on the board.
 #[derive(Default, Debug, Clone, Copy, PartialEq, Eq)]
@@ -107,6 +107,18 @@ impl File {
         }
 
         Some(Self::ALL[self as usize - n])
+    }
+
+    /// Get all squares to the left of this file.
+    #[inline(always)]
+    pub const fn left_side(self) -> Bitboard {
+        crate::bb_data::LEFTS[self as usize]
+    }
+
+    /// Get all squares to the right of this file.
+    #[inline(always)]
+    pub const fn right_side(self) -> Bitboard {
+        crate::bb_data::RIGHTS[self as usize]
     }
 }
 

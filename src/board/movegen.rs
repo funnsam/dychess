@@ -40,7 +40,8 @@ impl<'a> MoveGen<'a> {
             return if let Some((piece, color)) = self.board.piece_and_color_on(candidate.from()) {
                 if color != self.board.side_to_move { return Some(Err(())) };
 
-                let targets = self.board.piece_targets(self.board.side_to_move(), piece, candidate.from());
+                let targets = self.board.piece_targets(true, self.board.side_to_move(), piece, candidate.from())
+                    & !self.board.color_combined(self.board.side_to_move());
 
                 if !(targets & candidate.to().into()).is_empty() {
                     Some(Ok(candidate))
@@ -57,13 +58,19 @@ impl<'a> MoveGen<'a> {
             // println!("{square} {:?}", self.board.combined());
             let piece = self.board.piece_on(square).unwrap();
 
-            let piece_targets = self.board.piece_targets(self.board.side_to_move(), piece, square);
-            self.cur_promote_to = (
-                piece == Piece::Pawn
-                && !(piece_targets & pawn::PROMOTION_SQUARES).is_empty()
-            ) as u8;
+            let piece_targets = self.board.piece_targets(true, self.board.side_to_move(), piece, square)
+                & !self.board.color_combined(self.board.side_to_move());
+
             self.cur_piece_targets = piece_targets;
             self.cur_piece_sq = square;
+        }
+
+        if self.cur_promote_to == 0 {
+            let piece = self.board.piece_on(self.cur_piece_sq).unwrap();
+            self.cur_promote_to = (
+                piece == Piece::Pawn
+                && !(self.cur_piece_targets & pawn::PROMOTION_SQUARES).is_empty()
+            ) as u8;
         }
 
         let to_sq = self.cur_piece_targets.first_square().unwrap();
@@ -75,6 +82,9 @@ impl<'a> MoveGen<'a> {
             let promotion = Piece::ALL[self.cur_promote_to as usize];
             if promotion == Piece::Queen {
                 self.cur_piece_targets ^= to_sq.into();
+                self.cur_promote_to = 0;
+            } else {
+                self.cur_promote_to += 1;
             }
 
             Some(Ok(Move::new(self.cur_piece_sq, to_sq, Some(promotion))))

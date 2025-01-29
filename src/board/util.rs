@@ -9,7 +9,7 @@ impl Board {
 
             mailbox: [0; 64],
 
-            castle_rights: [CastleRights::default(); 2],
+            castle_rights: [CastleRights::default_no_rights(); 2],
 
             hash: 0,
             en_passant: None,

@@ -4,7 +4,11 @@ use crate::{bitboard::Bitboard, square::{File, Rank, Square}};
 
 pub fn generate_data(f: &mut impl Write) -> ([Bitboard; 8], [Bitboard; 8]) {
     generate_edge(f);
-    (generate_files(f), generate_ranks(f))
+    let files = generate_files(f);
+    let ranks = generate_ranks(f);
+    generate_lefts(f, files);
+    generate_rights(f, files);
+    (files, ranks)
 }
 
 pub fn generate_edge(f: &mut impl Write) {
@@ -56,4 +60,28 @@ pub fn generate_ranks(f: &mut impl Write) -> [Bitboard; 8] {
     }
     write!(f, "];").unwrap();
     res
+}
+
+pub fn generate_lefts(f: &mut impl Write, ranks: [Bitboard; 8]) {
+    write!(f, "pub const LEFTS: [Bitboard; 8] = [").unwrap();
+
+    let mut acc = Bitboard::default();
+    for r in ranks {
+        write!(f, "Bitboard({}),", acc.0).unwrap();
+        acc |= r;
+    }
+
+    write!(f, "];").unwrap();
+}
+
+pub fn generate_rights(f: &mut impl Write, ranks: [Bitboard; 8]) {
+    write!(f, "pub const RIGHTS: [Bitboard; 8] = [").unwrap();
+
+    let mut acc = !Bitboard::default();
+    for r in ranks {
+        acc ^= r;
+        write!(f, "Bitboard({}),", acc.0).unwrap();
+    }
+
+    write!(f, "];").unwrap();
 }
