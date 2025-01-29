@@ -41,13 +41,16 @@ impl Board {
 
     pub fn make_move(&mut self, mov: Move) {
         let move_bb = Bitboard::from(mov.from()) | mov.to().into();
-        let piece = self.erase_piece(self.side_to_move, mov.from())
+        let piece = self.erase_piece(self.side_to_move(), mov.from())
             .expect("tried to make invalid move: piece does not exist on move `from` square");
-        let capture = self.place_piece(self.side_to_move, mov.to(), piece);
+        let capture = self.place_piece(self.side_to_move(), mov.to(), piece);
 
         match piece {
-            Piece::Pawn => if let Some(ep) = self.en_passant {
-                self.erase_piece(!self.side_to_move, Square::new(ep, mov.from().rank()));
+            Piece::Pawn => {
+                // TODO: handle ep
+                // if let Some(ep) = self.en_passant {
+                //     self.erase_piece(!self.side_to_move, Square::new(ep, mov.from().rank()));
+                // }
             },
             Piece::Rook => {
                 if (mov.from() == Square::A1 && self.side_to_move == Color::White) ||
@@ -78,11 +81,11 @@ impl Board {
     }
 
     fn place_piece(&mut self, color: Color, square: Square, piece: Piece) -> Option<(Piece, Color)> {
-        if let Some((piece, color)) = self.piece_and_color_on(square) {
-            self.erase_piece(color, square);
+        if let Some((cp, cc)) = self.piece_and_color_on(square) {
+            self.erase_piece(cc, square);
             self.place_unchecked(color, square, piece);
 
-            Some((piece, color))
+            Some((cp, cc))
         } else {
             self.place_unchecked(color, square, piece);
 
@@ -94,7 +97,7 @@ impl Board {
         let to_bb = Bitboard::from(square);
         self.pieces[piece as usize] |= to_bb;
         self.colors[color as usize] |= to_bb;
-        self.mailbox[square.to_usize()] = mailbox_element(self.side_to_move, piece);
+        self.mailbox[square.to_usize()] = mailbox_element(color, piece);
         // TODO: update hash
     }
 
@@ -110,6 +113,42 @@ impl Board {
         }
 
         piece
+    }
+
+    pub fn is_check(&self) -> bool {
+        self.is_side_check(self.side_to_move)
+    }
+
+    pub fn is_illegal(&self) -> bool {
+        self.is_side_check(!self.side_to_move)
+    }
+
+    fn is_side_check(&self, color: Color) -> bool {
+        let combined = self.combined();
+        let ksq = self.king_of(color);
+
+        !(knight::moves(ksq) & self.knights_of(!color)).is_empty()
+            || !(pawn::captures(color, ksq) & self.pawns_of(!color)).is_empty()
+            || !(king::moves(ksq) & self.kings()).is_empty()
+            || !(bishop::moves(ksq, combined) & (self.bishops_of(!color) | self.queens_of(!color))).is_empty()
+            || !(rook::moves(ksq, combined) & (self.rooks_of(!color) | self.queens_of(!color))).is_empty()
+    }
+
+    #[doc(hidden)]
+    pub fn _check_legality(&self) {
+        assert_eq!(self.pieces.into_iter().fold(Bitboard::default(), |a, p| {
+            if !(a & p).is_empty() {
+                panic!("piece table overlap");
+            }
+
+            a ^ p
+        }), self.combined(), "piece tb cumul OR != color tb cumul OR");
+
+        for sq in self.combined() {
+            if let None = self.piece_on(sq) {
+                panic!("{self:?}\n{sq}");
+            }
+        }
     }
 }
 

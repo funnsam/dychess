@@ -73,7 +73,7 @@ impl<'a> MoveGen<'a> {
 
         while self.cur_piece_targets.is_empty() {
             let square = self.pieces.next()?;
-            println!("{square} {:?}", self.board.combined());
+            // println!("{square} {:?}", self.board.combined());
             let piece = self.board.piece_on(square).unwrap();
 
             let piece_targets = self.board.piece_targets(piece, square);

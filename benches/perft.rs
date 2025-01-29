@@ -1,11 +1,16 @@
 use dychess::prelude::*;
 
 fn perft<const ROOT: bool>(board: &Board, depth: usize) -> u64 {
+    board._check_legality();
     if depth == 0 { return 1 };
 
     let mut total = 0;
     for m in board.generate_moves(&[]) {
-        let this_node = perft::<false>(&board.copy_make_move(m), depth - 1);
+        // println!("{:<1$}{m}", "", 10 - depth);
+        let this = board.copy_make_move(m);
+        if this.is_illegal() { continue };
+
+        let this_node = perft::<false>(&this, depth - 1);
         total += this_node;
 
         if ROOT {
@@ -22,7 +27,7 @@ fn perft<const ROOT: bool>(board: &Board, depth: usize) -> u64 {
 
 fn main() {
     perft::<true>(&Board::from_fen(false, "\
-    rnbqkbnr/1ppppppp/p7/8/8/4P3/PPPP1PPP/RNBQKBNR w KQkq - 0 2\
+    rnbqkbnr/p1pppppp/Bp6/8/4P3/8/PPPP1PPP/RNBQK1NR b KQkq - 1 2\
     ").unwrap(), 1);
     initial_pos();
 }

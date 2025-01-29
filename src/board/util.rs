@@ -95,30 +95,78 @@ impl Board {
     #[inline(always)]
     pub fn kings(&self) -> Bitboard { self.piece_combined(Piece::King) }
 
-    /// All of our pawns on the board.
+    /// All of side to move's pawns on the board.
     #[inline(always)]
-    pub fn our_pawns(&self) -> Bitboard { self.piece_combined(Piece::Pawn) & self.our_pieces() }
+    pub fn our_pawns(&self) -> Bitboard { self.pawns_of(self.side_to_move()) }
 
-    /// All of our knights on the board.
+    /// All of side to move's knights on the board.
     #[inline(always)]
-    pub fn our_knights(&self) -> Bitboard { self.piece_combined(Piece::Knight) & self.our_pieces() }
+    pub fn our_knights(&self) -> Bitboard { self.knights_of(self.side_to_move()) }
 
-    /// All of our bishops on the board.
+    /// All of side to move's bishops on the board.
     #[inline(always)]
-    pub fn our_bishops(&self) -> Bitboard { self.piece_combined(Piece::Bishop) & self.our_pieces() }
+    pub fn our_bishops(&self) -> Bitboard { self.bishops_of(self.side_to_move()) }
 
-    /// All of our rooks on the board.
+    /// All of side to move's rooks on the board.
     #[inline(always)]
-    pub fn our_rooks(&self) -> Bitboard { self.piece_combined(Piece::Rook) & self.our_pieces() }
+    pub fn our_rooks(&self) -> Bitboard { self.rooks_of(self.side_to_move()) }
 
-    /// All of our queens on the board.
+    /// All of side to move's queens on the board.
     #[inline(always)]
-    pub fn our_queens(&self) -> Bitboard { self.piece_combined(Piece::Queen) & self.our_pieces() }
+    pub fn our_queens(&self) -> Bitboard { self.queens_of(self.side_to_move()) }
 
-    /// Our king on the board.
+    /// Side to move's king on the board.
     #[inline(always)]
-    pub fn our_king(&self) -> Square {
-        (self.piece_combined(Piece::King) & self.our_pieces())
+    pub fn our_king(&self) -> Square { self.king_of(self.side_to_move()) }
+
+    /// All of side to move's opponent's pawns on the board.
+    #[inline(always)]
+    pub fn their_pawns(&self) -> Bitboard { self.pawns_of(!self.side_to_move()) }
+
+    /// All of side to move's opponent's knights on the board.
+    #[inline(always)]
+    pub fn their_knights(&self) -> Bitboard { self.knights_of(!self.side_to_move()) }
+
+    /// All of side to move's opponent's bishops on the board.
+    #[inline(always)]
+    pub fn their_bishops(&self) -> Bitboard { self.bishops_of(!self.side_to_move()) }
+
+    /// All of side to move's opponent's rooks on the board.
+    #[inline(always)]
+    pub fn their_rooks(&self) -> Bitboard { self.rooks_of(!self.side_to_move()) }
+
+    /// All of side to move's opponent's queens on the board.
+    #[inline(always)]
+    pub fn their_queens(&self) -> Bitboard { self.queens_of(!self.side_to_move()) }
+
+    /// Side to move's opponent's king on the board.
+    #[inline(always)]
+    pub fn their_king(&self) -> Square { self.king_of(!self.side_to_move()) }
+
+    /// All of the pawns on the board that belongs to the side passed in.
+    #[inline(always)]
+    pub fn pawns_of(&self, color: Color) -> Bitboard { self.pawns() & self.color_combined(color) }
+
+    /// All of the knights on the board that belongs to the side passed in.
+    #[inline(always)]
+    pub fn knights_of(&self, color: Color) -> Bitboard { self.knights() & self.color_combined(color) }
+
+    /// All of the bishops on the board that belongs to the side passed in.
+    #[inline(always)]
+    pub fn bishops_of(&self, color: Color) -> Bitboard { self.bishops() & self.color_combined(color) }
+
+    /// All of the rooks on the board that belongs to the side passed in.
+    #[inline(always)]
+    pub fn rooks_of(&self, color: Color) -> Bitboard { self.rooks() & self.color_combined(color) }
+
+    /// All of the queens on the board that belongs to the side passed in.
+    #[inline(always)]
+    pub fn queens_of(&self, color: Color) -> Bitboard { self.queens() & self.color_combined(color) }
+
+    /// The king on the board that belongs to the side passed in.
+    #[inline(always)]
+    pub fn king_of(&self, color: Color) -> Square {
+        (self.kings() & self.color_combined(color))
             .try_into()
             .expect("there should only be a king for each side")
     }
