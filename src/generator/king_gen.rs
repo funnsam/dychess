@@ -39,12 +39,12 @@ fn generate_castle_paths(f: &mut impl Write) {
                 if king_file > castle_side {
                     // castle to left
                     for f in File::ALL.into_iter().skip(2) {
-                        if f == king_file { break };
                         bb |= Square::new(f, color.back_rank()).into();
+                        if f == king_file { break };
                     }
                 } else {
                     // castle to right
-                    for f in File::ALL.into_iter().skip(king_file as usize + 1) {
+                    for f in File::ALL.into_iter().skip(king_file as usize) {
                         bb |= Square::new(f, color.back_rank()).into();
                         if f == castle_side { break };
                     }
