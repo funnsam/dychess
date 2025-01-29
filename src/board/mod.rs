@@ -41,16 +41,15 @@ impl Board {
 
     pub fn make_move(&mut self, mov: Move) {
         let move_bb = Bitboard::from(mov.from()) | mov.to().into();
-        let piece = self.erase_piece(self.side_to_move(), mov.from())
+        let (piece, _) = self.erase_piece(mov.from())
             .expect("tried to make invalid move: piece does not exist on move `from` square");
         let capture = self.place_piece(self.side_to_move(), mov.to(), piece);
 
         match piece {
-            Piece::Pawn => {
-                // TODO: handle ep
-                // if let Some(ep) = self.en_passant {
-                //     self.erase_piece(!self.side_to_move, Square::new(ep, mov.from().rank()));
-                // }
+            Piece::Pawn => if let Some(ep) = self.en_passant {
+                if mov.from().file() != mov.to().file() && mov.to().file() == ep && !(pawn::EP_TARGETS & mov.to().into()).is_empty() {
+                    self.erase_piece(Square::new(ep, mov.from().rank()));
+                }
             },
             Piece::Rook => {
                 if (mov.from() == Square::A1 && self.side_to_move == Color::White) ||
@@ -81,16 +80,9 @@ impl Board {
     }
 
     fn place_piece(&mut self, color: Color, square: Square, piece: Piece) -> Option<(Piece, Color)> {
-        if let Some((cp, cc)) = self.piece_and_color_on(square) {
-            self.erase_piece(cc, square);
-            self.place_unchecked(color, square, piece);
-
-            Some((cp, cc))
-        } else {
-            self.place_unchecked(color, square, piece);
-
-            None
-        }
+        let ret = self.erase_piece(square);
+        self.place_unchecked(color, square, piece);
+        ret
     }
 
     fn place_unchecked(&mut self, color: Color, square: Square, piece: Piece) {
@@ -101,10 +93,10 @@ impl Board {
         // TODO: update hash
     }
 
-    fn erase_piece(&mut self, color: Color, square: Square) -> Option<Piece> {
-        let piece = self.piece_on(square);
+    fn erase_piece(&mut self, square: Square) -> Option<(Piece, Color)> {
+        let piece = self.piece_and_color_on(square);
 
-        if let Some(piece) = piece {
+        if let Some((piece, color)) = piece {
             let bb = Bitboard::from(square);
             self.pieces[piece as usize] &= !bb;
             self.colors[color as usize] &= !bb;
@@ -113,6 +105,32 @@ impl Board {
         }
 
         piece
+    }
+
+    pub(crate) fn piece_targets(&self, color: Color, piece: Piece, sq: Square) -> Bitboard {
+        (match piece {
+            Piece::Pawn => {
+                let advances = pawn::advances(color, sq, self.combined());
+                let captures = pawn::captures(color, sq);
+                advances | (captures & (self.color_combined(!color) | self.ep_square(color)))
+            },
+            Piece::Knight => knight::moves(sq),
+            Piece::Bishop => bishop::moves(sq, self.combined()),
+            Piece::Rook => rook::moves(sq, self.combined()),
+            Piece::Queen => queen::moves(sq, self.combined()),
+            Piece::King => {
+                // TODO: castling
+                king::moves(sq)
+            },
+        }) & !self.color_combined(color)
+    }
+
+    fn ep_square(&self, color: Color) -> Bitboard {
+        if let Some(f) = self.en_passant {
+            Square::new(f, [Rank::_3, Rank::_6][!color as usize]).into()
+        } else {
+            Bitboard::default()
+        }
     }
 
     pub fn is_check(&self) -> bool {
@@ -132,6 +150,15 @@ impl Board {
             || !(king::moves(ksq) & self.kings()).is_empty()
             || !(bishop::moves(ksq, combined) & (self.bishops_of(!color) | self.queens_of(!color))).is_empty()
             || !(rook::moves(ksq, combined) & (self.rooks_of(!color) | self.queens_of(!color))).is_empty()
+    }
+
+    pub fn side_attack_def(&self, color: Color) -> Bitboard {
+        let mut atkdef = Bitboard::default();
+        for sq in self.color_combined(color) {
+            let piece = self.piece_on(sq).unwrap();
+            atkdef |= self.piece_targets(color, piece, sq);
+        }
+        atkdef
     }
 
     #[doc(hidden)]

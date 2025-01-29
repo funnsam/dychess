@@ -9,10 +9,12 @@ pub fn generate_moves(f: &mut impl Write, ranks: [Bitboard; 8]) {
         f,
         "
         const DOUBLE_PUSHES: [Bitboard; 2] = [Bitboard({}), Bitboard({})];
+        pub const EP_TARGETS: Bitboard = Bitboard({});
         pub const PROMOTION_SQUARES: Bitboard = Bitboard({});
         ",
         (ranks[1] | ranks[3]).0,
         (ranks[6] | ranks[4]).0,
+        (ranks[2] | ranks[5]).0,
         (ranks[0] | ranks[7]).0,
     ).unwrap();
 }

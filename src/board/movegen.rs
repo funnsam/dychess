@@ -29,25 +29,6 @@ impl Board {
             pieces: self.our_pieces().into_iter(),
         }
     }
-
-    fn piece_targets(&self, piece: Piece, sq: Square) -> Bitboard {
-        (match piece {
-            Piece::Pawn => {
-                // TODO: ep
-                let advances = pawn::advances(self.side_to_move(), sq, self.combined());
-                let captures = pawn::captures(self.side_to_move(), sq);
-                advances | (captures & self.their_pieces())
-            },
-            Piece::Knight => knight::moves(sq),
-            Piece::Bishop => bishop::moves(sq, self.combined()),
-            Piece::Rook => rook::moves(sq, self.combined()),
-            Piece::Queen => queen::moves(sq, self.combined()),
-            Piece::King => {
-                // TODO: castling
-                king::moves(sq)
-            },
-        }) & !self.our_pieces()
-    }
 }
 
 impl<'a> MoveGen<'a> {
@@ -59,7 +40,7 @@ impl<'a> MoveGen<'a> {
             return if let Some((piece, color)) = self.board.piece_and_color_on(candidate.from()) {
                 if color != self.board.side_to_move { return Some(Err(())) };
 
-                let targets = self.board.piece_targets(piece, candidate.from());
+                let targets = self.board.piece_targets(self.board.side_to_move(), piece, candidate.from());
 
                 if !(targets & candidate.to().into()).is_empty() {
                     Some(Ok(candidate))
@@ -76,7 +57,7 @@ impl<'a> MoveGen<'a> {
             // println!("{square} {:?}", self.board.combined());
             let piece = self.board.piece_on(square).unwrap();
 
-            let piece_targets = self.board.piece_targets(piece, square);
+            let piece_targets = self.board.piece_targets(self.board.side_to_move(), piece, square);
             self.cur_promote_to = (
                 piece == Piece::Pawn
                 && !(piece_targets & pawn::PROMOTION_SQUARES).is_empty()
