@@ -18,12 +18,14 @@ impl CastleRights {
         Self(0b111_000_00)
     }
 
+    #[allow(unused)]
     #[inline(always)]
     pub(crate) fn set_ks_file(&mut self, f: File) {
         self.0 &= !0b111_000_00;
         self.0 |= (f as u8) << 5;
     }
 
+    #[allow(unused)]
     #[inline(always)]
     pub(crate) fn set_qs_file(&mut self, f: File) {
         self.0 &= !0b000_111_00;

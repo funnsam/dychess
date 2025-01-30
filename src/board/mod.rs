@@ -105,6 +105,29 @@ impl Board {
         self.side_to_move = !self.side_to_move();
     }
 
+    /// Pass this move to the side to move.
+    ///
+    /// # Notes
+    /// This should only be called if we aren't in check.
+    ///
+    /// # Returns
+    /// This returns a [`BoardUnpasser`] to undo this passing move by calling
+    /// [`Self::restore_passed`].
+    #[inline(always)]
+    pub fn pass_move(&mut self) -> BoardUnpasser {
+        self.side_to_move = !self.side_to_move();
+        BoardUnpasser {
+            en_passant: core::mem::take(&mut self.en_passant),
+        }
+    }
+
+    /// Restore a passed move that was made by [`Self::pass_move`].
+    #[inline(always)]
+    pub fn restore_passed(&mut self, unpasser: BoardUnpasser) {
+        self.side_to_move = !self.side_to_move();
+        self.en_passant = unpasser.en_passant;
+    }
+
     #[inline(always)]
     fn place_piece(&mut self, color: Color, square: Square, piece: Piece) -> Option<(Piece, Color)> {
         let ret = self.erase_piece(square);
@@ -255,4 +278,9 @@ impl core::hash::Hash for Board {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         self.hash.hash(state)
     }
+}
+
+#[derive(Debug)]
+pub struct BoardUnpasser {
+    en_passant: Option<File>,
 }
