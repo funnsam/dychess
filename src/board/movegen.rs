@@ -40,8 +40,7 @@ impl<'a> MoveGen<'a> {
             return if let Some((piece, color)) = self.board.piece_and_color_on(candidate.from()) {
                 if color != self.board.side_to_move { return Some(Err(())) };
 
-                let targets = self.board.piece_targets(true, self.board.side_to_move(), piece, candidate.from())
-                    & !self.board.color_combined(self.board.side_to_move());
+                let targets = self.board.piece_targets::<false>(self.board.side_to_move(), piece, candidate.from());
 
                 if !(targets & candidate.to().into()).is_empty() {
                     Some(Ok(candidate))
@@ -58,8 +57,7 @@ impl<'a> MoveGen<'a> {
             // println!("{square} {:?}", self.board.combined());
             let piece = self.board.piece_on(square).unwrap();
 
-            let piece_targets = self.board.piece_targets(true, self.board.side_to_move(), piece, square)
-                & !self.board.color_combined(self.board.side_to_move());
+            let piece_targets = self.board.piece_targets::<false>(self.board.side_to_move(), piece, square);
 
             self.cur_piece_targets = piece_targets;
             self.cur_piece_sq = square;

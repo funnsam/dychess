@@ -43,7 +43,7 @@ impl Board {
         let move_bb = Bitboard::from(mov.from()) | mov.to().into();
         let (piece, _) = self.erase_piece(mov.from())
             .expect("tried to make invalid move: piece does not exist on move `from` square");
-        let capture = self.place_piece(self.side_to_move(), mov.to(), piece);
+        let capture = self.place_piece(self.side_to_move(), mov.to(), mov.promotion().unwrap_or(piece));
 
         match piece {
             Piece::Pawn => if let Some(ep) = self.en_passant {
@@ -133,12 +133,17 @@ impl Board {
         piece
     }
 
-    pub(crate) fn piece_targets(&self, castle: bool, color: Color, piece: Piece, sq: Square) -> Bitboard {
-        match piece {
+    pub(crate) fn piece_targets<const ATKDEF: bool>(&self, color: Color, piece: Piece, sq: Square) -> Bitboard {
+        let bb = match piece {
             Piece::Pawn => {
                 let advances = pawn::advances(color, sq, self.combined());
                 let captures = pawn::captures(color, sq);
-                advances | (captures & (self.color_combined(!color) | self.ep_square(color)))
+
+                if !ATKDEF {
+                    advances | (captures & (self.color_combined(!color) | self.ep_square(color)))
+                } else {
+                    advances | captures
+                }
             },
             Piece::Knight => knight::moves(sq),
             Piece::Bishop => bishop::moves(sq, self.combined()),
@@ -147,7 +152,7 @@ impl Board {
             Piece::King => {
                 let mut moves = king::moves(sq);
 
-                if castle && self.castle_rights[color as usize].king_side() {
+                if !ATKDEF && self.castle_rights[color as usize].king_side() {
                     if let Some(ks_rook) = (self.rooks_of(color) & self.castle_rights[color as usize].king_side_file().into() & color.back_rank().into()).first_square() {
                         if (king::castle_clearance(color, sq.file(), ks_rook.file()) & self.combined()).is_empty()
                             && (king::castle_path(color, sq.file(), ks_rook.file()) & self.side_attack_def(!color)).is_empty()
@@ -157,7 +162,7 @@ impl Board {
                     }
                 }
 
-                if castle && self.castle_rights[color as usize].queen_side() {
+                if !ATKDEF && self.castle_rights[color as usize].queen_side() {
                     if let Some(qs_rook) = (self.rooks_of(color) & self.castle_rights[color as usize].queen_side_file().into() & color.back_rank().into()).first_square() {
                         if (king::castle_clearance(color, sq.file(), qs_rook.file()) & self.combined()).is_empty()
                             && (king::castle_path(color, sq.file(), qs_rook.file()) & self.side_attack_def(!color)).is_empty()
@@ -169,6 +174,12 @@ impl Board {
 
                 moves
             },
+        };
+
+        if !ATKDEF {
+            bb & !self.color_combined(self.side_to_move())
+        } else {
+            bb
         }
     }
 
@@ -203,7 +214,7 @@ impl Board {
         let mut atkdef = Bitboard::default();
         for sq in self.color_combined(color) {
             let piece = self.piece_on(sq).unwrap();
-            atkdef |= self.piece_targets(false, color, piece, sq);
+            atkdef |= self.piece_targets::<true>(color, piece, sq);
         }
         atkdef
     }

@@ -9,8 +9,8 @@ const POS6: &str = "r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK
 
 fn main() {
     // perft::<true>(&Board::from_fen(false, "\
-    // r3k2r/p1ppqQb1/bn2p1p1/3PN3/1p2n3/2N4p/PPPBBPPP/1R2K2R b Kkq - 0 2\
-    // ").unwrap(), 1);
+    // r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q2/PPPBBPpP/R3K2R b Kkq - 1 2
+    // ").unwrap(), 2);
     // panic!();
 
     // test(INIT_POS, &[20, 400, 8_902, 197_281, 4_865_609, 119_060_324]);
