@@ -73,9 +73,9 @@ impl<'a> MoveGen<'a> {
 
         let to_sq = self.cur_piece_targets.first_square().unwrap();
 
-        if self.cur_promote_to == 0 {
+        let mov = if self.cur_promote_to == 0 {
             self.cur_piece_targets ^= to_sq.into();
-            Some(Ok(Move::new(self.cur_piece_sq, to_sq, None)))
+            Move::new(self.cur_piece_sq, to_sq, None)
         } else {
             let promotion = Piece::ALL[self.cur_promote_to as usize];
             if promotion == Piece::Queen {
@@ -85,8 +85,10 @@ impl<'a> MoveGen<'a> {
                 self.cur_promote_to += 1;
             }
 
-            Some(Ok(Move::new(self.cur_piece_sq, to_sq, Some(promotion))))
-        }
+            Move::new(self.cur_piece_sq, to_sq, Some(promotion))
+        };
+
+        Some((!self.priority.contains(&mov)).then_some(mov).ok_or(()))
     }
 }
 

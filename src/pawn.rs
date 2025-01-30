@@ -20,3 +20,10 @@ pub fn captures(color: Color, square: Square) -> Bitboard {
 pub fn double_pushes(color: Color) -> Bitboard {
     DOUBLE_PUSHES[color as usize]
 }
+
+pub fn ep_targets(color: Color) -> Bitboard {
+    match color {
+        Color::White => Rank::_6.into(),
+        Color::Black => Rank::_3.into(),
+    }
+}

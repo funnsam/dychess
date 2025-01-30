@@ -47,7 +47,7 @@ impl Board {
 
         match piece {
             Piece::Pawn => if let Some(ep) = self.en_passant {
-                if mov.from().file() != mov.to().file() && mov.to().file() == ep && !(pawn::EP_TARGETS & mov.to().into()).is_empty() {
+                if mov.from().file() != mov.to().file() && mov.to().file() == ep && !(pawn::ep_targets(self.side_to_move()) & mov.to().into()).is_empty() {
                     self.erase_piece(Square::new(ep, mov.from().rank()));
                 }
             },

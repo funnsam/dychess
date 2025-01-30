@@ -9,19 +9,23 @@ const POS6: &str = "r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK
 
 fn main() {
     // perft::<true>(&Board::from_fen(false, "\
-    // r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q2/PPPBBPpP/R3K2R b Kkq - 1 2
+    // r6r/Pppk1ppp/1b1B1nbN/nP1p4/B1P1P3/q4N2/Pp1P1RPP/R2Q2K1 w - - 2 3\
     // ").unwrap(), 2);
     // panic!();
 
-    // test(INIT_POS, &[20, 400, 8_902, 197_281, 4_865_609, 119_060_324]);
-    test(KIWIPETE, &[48, 2039, 97862, 4085603, 193690690, 8031647685]);
+    test(INIT_POS, &[20, 400, 8_902, 197_281, 4_865_609, 119_060_324]);
+    test(KIWIPETE, &[48, 2_039, 97_862, 4_085_603, 193_690_690]);
+    test(POS3, &[14, 191, 2_812, 43_238, 674_624, 11_030_083, 178_633_661]);
+    test(POS4, &[6, 264, 9_467, 422_333, 15_833_292]);
+    test(POS5, &[44, 1_486, 62_379, 2_103_487, 89_941_194]);
+    test(POS6, &[46, 2_079, 89_890, 3_894_594, 164_075_551]);
 }
 
 fn test(pos: &str, expected: &[u64]) {
     let board = Board::from_fen(false, pos).expect(pos);
 
     for (i, expected) in expected.into_iter().enumerate() {
-        assert_eq!(perft::<true>(&board, i + 1), *expected);
+        assert_eq!(perft::<true>(&board, i + 1), *expected, "{pos} ; D{}", i + 1);
     }
 }
 
