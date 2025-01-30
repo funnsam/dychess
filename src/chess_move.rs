@@ -2,7 +2,7 @@ use core::fmt;
 
 use crate::{piece::Piece, square::Square};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Default, Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Move(u16);
 
 impl Move {
@@ -19,17 +19,19 @@ impl Move {
     /// assert_eq!(mov.promotion(), None);
     /// ```
     #[inline(always)]
-    pub fn new(from: Square, to: Square, promotion: Option<Piece>) -> Self {
-        let promotion = promotion.unwrap_or(Piece::Pawn);
-
-        Self(((promotion as u16) << 12) | ((to.to_u8() as u16) << 6) | (from.to_u8() as u16))
+    pub const fn new(from: Square, to: Square, promotion: Option<Piece>) -> Self {
+        if let Some(promotion) = promotion {
+            Self(((promotion as u16) << 12) | ((to.to_u8() as u16) << 6) | (from.to_u8() as u16))
+        } else {
+            Self(((to.to_u8() as u16) << 6) | (from.to_u8() as u16))
+        }
     }
 
     #[inline(always)]
-    pub fn from(&self) -> Square { Square::from_index(self.0 as u8 & 63) }
+    pub const fn from(&self) -> Square { Square::from_index(self.0 as u8 & 63) }
 
     #[inline(always)]
-    pub fn to(&self) -> Square { Square::from_index((self.0 >> 6) as u8 & 63) }
+    pub const fn to(&self) -> Square { Square::from_index((self.0 >> 6) as u8 & 63) }
 
     #[inline(always)]
     pub fn promotion(&self) -> Option<Piece> {

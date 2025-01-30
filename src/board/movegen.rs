@@ -1,7 +1,7 @@
 use super::*;
 
 /// A staged pseudo-legal move generator.
-pub struct MoveGen<'a> {
+pub struct MoveGen<'a, const CAPTURES: bool> {
     board: &'a Board,
     priority: &'a [Move],
     priority_at: usize,
@@ -17,7 +17,24 @@ impl Board {
     /// Generate pseudo-legal moves that can be iterated with a list of moves that are prioritized
     /// over other moves.
     #[inline(always)]
-    pub fn pseudo_legal_moves<'a>(&'a self, priority: &'a [Move]) -> MoveGen<'a> {
+    pub fn pseudo_legal_moves<'a>(&'a self, priority: &'a [Move]) -> MoveGen<'a, false> {
+        MoveGen {
+            board: self,
+            priority,
+            priority_at: 0,
+
+            cur_piece_targets: Bitboard::default(),
+            cur_piece_sq: Square::default(),
+            cur_promote_to: 0,
+
+            pieces: self.our_pieces().into_iter(),
+        }
+    }
+
+    /// Generate pseudo-legal captures that can be iterated with a list of moves that are
+    /// prioritized over other moves.
+    #[inline(always)]
+    pub fn pseudo_legal_captures<'a>(&'a self, priority: &'a [Move]) -> MoveGen<'a, true> {
         MoveGen {
             board: self,
             priority,
@@ -32,9 +49,11 @@ impl Board {
     }
 }
 
-impl<'a> MoveGen<'a> {
+impl<'a, const CAPTURES: bool> MoveGen<'a, CAPTURES> {
     #[inline(always)]
     fn try_next(&mut self) -> Option<Result<Move, ()>> {
+        let target_mask = if CAPTURES { self.board.combined() } else { !Bitboard::default() };
+
         if self.priority_at < self.priority.len() {
             let candidate = self.priority[self.priority_at];
             self.priority_at += 1;
@@ -44,7 +63,8 @@ impl<'a> MoveGen<'a> {
             return if let Some((piece, color)) = self.board.piece_and_color_on(candidate.from()) {
                 if color != self.board.side_to_move { return Some(Err(())) };
 
-                let targets = self.board.piece_targets::<false>(self.board.side_to_move(), piece, candidate.from());
+                let targets = self.board.piece_targets::<false>(self.board.side_to_move(), piece, candidate.from())
+                    & target_mask;
 
                 if !(targets & candidate.to().into()).is_empty() {
                     Some(Ok(candidate))
@@ -60,7 +80,8 @@ impl<'a> MoveGen<'a> {
             let square = self.pieces.next()?;
             let piece = self.board.piece_on(square).unwrap();
 
-            let piece_targets = self.board.piece_targets::<false>(self.board.side_to_move(), piece, square);
+            let piece_targets = self.board.piece_targets::<false>(self.board.side_to_move(), piece, square)
+                & target_mask;
 
             self.cur_piece_targets = piece_targets;
             self.cur_piece_sq = square;
@@ -97,7 +118,7 @@ impl<'a> MoveGen<'a> {
     }
 }
 
-impl<'a> Iterator for MoveGen<'a> {
+impl<'a, const CAPTURES: bool> Iterator for MoveGen<'a, CAPTURES> {
     type Item = Move;
 
     fn next(&mut self) -> Option<Move> {
@@ -109,4 +130,4 @@ impl<'a> Iterator for MoveGen<'a> {
     }
 }
 
-impl<'a> core::iter::FusedIterator for MoveGen<'a> {}
+impl<'a, const CAPTURES: bool> core::iter::FusedIterator for MoveGen<'a, CAPTURES> {}
