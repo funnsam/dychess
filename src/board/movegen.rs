@@ -16,7 +16,8 @@ pub struct MoveGen<'a> {
 impl Board {
     /// Generate pseudo-legal moves that can be iterated with a list of moves that are prioritized
     /// over other moves.
-    pub fn generate_moves<'a>(&'a self, priority: &'a [Move]) -> MoveGen<'a> {
+    #[inline(always)]
+    pub fn pseudo_legal_moves<'a>(&'a self, priority: &'a [Move]) -> MoveGen<'a> {
         MoveGen {
             board: self,
             priority,
@@ -32,10 +33,13 @@ impl Board {
 }
 
 impl<'a> MoveGen<'a> {
+    #[inline(always)]
     fn try_next(&mut self) -> Option<Result<Move, ()>> {
         if self.priority_at < self.priority.len() {
             let candidate = self.priority[self.priority_at];
             self.priority_at += 1;
+
+            if self.priority[..self.priority_at - 1].contains(&candidate) { return Some(Err(())) };
 
             return if let Some((piece, color)) = self.board.piece_and_color_on(candidate.from()) {
                 if color != self.board.side_to_move { return Some(Err(())) };
@@ -54,7 +58,6 @@ impl<'a> MoveGen<'a> {
 
         while self.cur_piece_targets.is_empty() {
             let square = self.pieces.next()?;
-            // println!("{square} {:?}", self.board.combined());
             let piece = self.board.piece_on(square).unwrap();
 
             let piece_targets = self.board.piece_targets::<false>(self.board.side_to_move(), piece, square);
@@ -71,7 +74,8 @@ impl<'a> MoveGen<'a> {
             ) as u8;
         }
 
-        let to_sq = self.cur_piece_targets.first_square().unwrap();
+        // SAFETY: `self.cur_piece_targets` is checked for 0 in a loop before
+        let to_sq = unsafe { self.cur_piece_targets.first_square().unwrap_unchecked() };
 
         let mov = if self.cur_promote_to == 0 {
             self.cur_piece_targets ^= to_sq.into();

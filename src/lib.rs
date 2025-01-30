@@ -39,7 +39,7 @@ pub(crate) mod rays {
 }
 
 pub(crate) mod magic {
-    use crate::bitboard::*;
+    use crate::prelude::*;
 
     include!(concat!(env!("OUT_DIR"), "/magic.rs"));
 

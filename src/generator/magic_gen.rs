@@ -107,6 +107,17 @@ pub fn gen<F: Fn(Bitboard, Square) -> Bitboard>(
         write!(f, "]),").unwrap();
     }
     write!(f, "];").unwrap();
+    write!(f, "\
+#[inline(always)]
+pub(crate) fn {}_moves(square: Square, blockers: Bitboard) -> Bitboard {{ \
+    unsafe {{ \
+        let (magic, table): &(_, &_) = {name}.get_unchecked(square.to_usize()); \
+        let masked = blockers & magic.mask;
+        let idx = masked.wrapping_mul(magic.mul) >> (64 - magic.bits);
+
+        *table.get_unchecked(idx as usize) \
+    }} \
+}}", name.to_lowercase()).unwrap();
 }
 
 fn gen_blocker_tb<F: Fn(Bitboard, Square) -> Bitboard>(mask: Bitboard, sq: Square, res: F) -> Table {

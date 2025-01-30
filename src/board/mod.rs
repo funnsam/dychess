@@ -24,6 +24,7 @@ pub struct Board {
 }
 
 impl Default for Board {
+    #[inline(always)]
     fn default() -> Self {
         Board::from_fen(
             false,
@@ -67,9 +68,7 @@ impl Board {
 
                 if self.chess960 && capture == Some((Piece::Rook, self.side_to_move())) {
                     todo!("chess960 castling");
-                }
-
-                if !self.chess960 && (move_bb & king::CASTLE_MOVE) == move_bb {
+                } else if !self.chess960 && (move_bb & king::CASTLE_MOVE) == move_bb {
                     const ROOK_AT: [File; 8] = [
                         File::A,
                         File::A,
@@ -105,12 +104,14 @@ impl Board {
         self.side_to_move = !self.side_to_move();
     }
 
+    #[inline(always)]
     fn place_piece(&mut self, color: Color, square: Square, piece: Piece) -> Option<(Piece, Color)> {
         let ret = self.erase_piece(square);
         self.place_unchecked(color, square, piece);
         ret
     }
 
+    #[inline(always)]
     fn place_unchecked(&mut self, color: Color, square: Square, piece: Piece) {
         let to_bb = Bitboard::from(square);
         self.pieces[piece as usize] |= to_bb;
@@ -119,6 +120,7 @@ impl Board {
         // TODO: update hash
     }
 
+    #[inline(always)]
     fn erase_piece(&mut self, square: Square) -> Option<(Piece, Color)> {
         let piece = self.piece_and_color_on(square);
 
@@ -183,6 +185,7 @@ impl Board {
         }
     }
 
+    #[inline(always)]
     fn ep_square(&self, color: Color) -> Bitboard {
         if let Some(f) = self.en_passant {
             Square::new(f, [Rank::_3, Rank::_6][!color as usize]).into()
@@ -191,10 +194,12 @@ impl Board {
         }
     }
 
+    #[inline(always)]
     pub fn is_check(&self) -> bool {
         self.is_side_check(self.side_to_move)
     }
 
+    #[inline(always)]
     pub fn is_illegal(&self) -> bool {
         self.is_side_check(!self.side_to_move)
     }
@@ -219,24 +224,25 @@ impl Board {
         atkdef
     }
 
-    #[doc(hidden)]
-    pub fn _check_legality(&self) {
-        assert_eq!(self.pieces.into_iter().fold(Bitboard::default(), |a, p| {
-            if !(a & p).is_empty() {
-                panic!("piece table overlap");
-            }
+    // #[doc(hidden)]
+    // pub fn _check_legality(&self) {
+    //     assert_eq!(self.pieces.into_iter().fold(Bitboard::default(), |a, p| {
+    //         if !(a & p).is_empty() {
+    //             panic!("piece table overlap");
+    //         }
 
-            a ^ p
-        }), self.combined(), "piece tb cumul OR != color tb cumul OR");
+    //         a ^ p
+    //     }), self.combined(), "piece tb cumul OR != color tb cumul OR");
 
-        for sq in self.combined() {
-            if let None = self.piece_on(sq) {
-                panic!("{self:?}\n{sq}");
-            }
-        }
-    }
+    //     for sq in self.combined() {
+    //         if let None = self.piece_on(sq) {
+    //             panic!("{self:?}\n{sq}");
+    //         }
+    //     }
+    // }
 }
 
+#[inline(always)]
 fn mailbox_element(color: Color, piece: Piece) -> u8 {
     ((color as u8 + 1) << 3) | (piece as u8)
 }

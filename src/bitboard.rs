@@ -55,6 +55,14 @@ impl Bitboard {
         Some(Square::from_index(self.0.trailing_zeros() as _))
     }
 
+    /// Get the last square in this bitboard, or [None] if it is empty.
+    #[inline(always)]
+    pub const fn last_square(self) -> Option<Square> {
+        if self.is_empty() { return None };
+
+        Some(Square::from_index(63 - self.0.leading_zeros() as u8))
+    }
+
     /// Get the number of set bits in this bitboard.
     #[inline(always)]
     pub const fn popcnt(self) -> u32 {
