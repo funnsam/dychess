@@ -25,9 +25,12 @@ impl Board {
     /// Get the piece and color on a given square.
     #[inline(always)]
     pub fn piece_and_color_on(&self, square: Square) -> Option<(Piece, Color)> {
-        let element = self.mailbox[square.to_usize()];
-        (element != 0).then(|| {
-            (Piece::ALL[element as usize & 7], Color::ALL[(element as usize >> 3) - 1])
+        let element = unsafe { *self.mailbox.get_unchecked(square.to_usize()) };
+        (element != 0).then(|| unsafe {
+            (
+                *Piece::ALL.get_unchecked(element as usize & 7),
+                *Color::ALL.get_unchecked((element as usize >> 3) - 1),
+            )
         })
     }
 

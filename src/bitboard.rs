@@ -32,6 +32,7 @@ impl From<Rank> for Bitboard {
 impl TryFrom<Bitboard> for Square {
     type Error = u32;
 
+    #[inline(always)]
     fn try_from(bb: Bitboard) -> Result<Self, Self::Error> {
         let popcnt = bb.popcnt();
         if popcnt != 1 { return Err(popcnt) };
@@ -180,7 +181,7 @@ impl Iterator for BitboardIter {
             let tz = self.remaining.0.trailing_zeros();
             self.remaining.0 >>= tz + 1;
             self.at += tz as usize + 1;
-            Square::ALL[self.at - 1]
+            unsafe { *Square::ALL.get_unchecked(self.at - 1) }
         })
     }
 

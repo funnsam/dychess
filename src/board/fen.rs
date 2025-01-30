@@ -39,6 +39,8 @@ impl Board {
     /// ).expect("valid position");
     /// ```
     pub fn from_fen(chess960: bool, fen: &str) -> Result<Self, FenError> {
+        assert!(!chess960, "chess960 is not supported yet");
+
         let mut board = Self::empty();
         let mut fen = fen.chars();
 

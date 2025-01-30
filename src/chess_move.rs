@@ -33,7 +33,7 @@ impl Move {
 
     #[inline(always)]
     pub fn promotion(&self) -> Option<Piece> {
-        let promotion = Piece::ALL[self.0 as usize >> 12];
+        let promotion = unsafe { *Piece::ALL.get_unchecked(self.0 as usize >> 12) };
 
         (promotion != Piece::Pawn).then_some(promotion)
     }

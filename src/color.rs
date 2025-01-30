@@ -8,6 +8,7 @@ pub enum Color {
 impl core::ops::Not for Color {
     type Output = Self;
 
+    #[inline(always)]
     fn not(self) -> Self::Output {
         match self {
             Self::White => Self::Black,
@@ -20,6 +21,7 @@ impl Color {
     /// All of the colors with ascending indices.
     pub const ALL: [Self; 2] = [Self::White, Self::Black];
 
+    #[inline(always)]
     pub fn back_rank(self) -> Rank {
         match self {
             Color::White => Rank::_1,

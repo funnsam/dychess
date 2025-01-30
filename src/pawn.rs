@@ -23,7 +23,10 @@ pub fn captures(color: Color, square: Square) -> Bitboard {
 
 #[inline(always)]
 pub fn double_pushes(color: Color) -> Bitboard {
-    DOUBLE_PUSHES[color as usize]
+    match color {
+        Color::White => Bitboard::from(Rank::_2) | Bitboard::from(Rank::_4),
+        Color::Black => Bitboard::from(Rank::_7) | Bitboard::from(Rank::_5),
+    }
 }
 
 #[inline(always)]

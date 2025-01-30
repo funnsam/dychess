@@ -34,6 +34,7 @@ impl Default for Board {
 }
 
 impl Board {
+    #[inline(always)]
     pub fn copy_make_move(&self, mov: Move) -> Self {
         let mut after = self.clone();
         after.make_move(mov);
@@ -126,8 +127,9 @@ impl Board {
 
         if let Some((piece, color)) = piece {
             let bb = Bitboard::from(square);
-            self.pieces[piece as usize] &= !bb;
-            self.colors[color as usize] &= !bb;
+
+            self.pieces[piece as usize] ^= bb;
+            self.colors[color as usize] ^= bb;
             self.mailbox[square.to_usize()] = 0;
             // TODO: update hash
         }
@@ -138,13 +140,14 @@ impl Board {
     pub(crate) fn piece_targets<const ATKDEF: bool>(&self, color: Color, piece: Piece, sq: Square) -> Bitboard {
         let bb = match piece {
             Piece::Pawn => {
-                let advances = pawn::advances(color, sq, self.combined());
                 let captures = pawn::captures(color, sq);
 
                 if !ATKDEF {
+                    let advances = pawn::advances(color, sq, self.combined());
+
                     advances | (captures & (self.color_combined(!color) | self.ep_square(color)))
                 } else {
-                    advances | captures
+                    captures
                 }
             },
             Piece::Knight => knight::moves(sq),
@@ -196,12 +199,12 @@ impl Board {
 
     #[inline(always)]
     pub fn is_check(&self) -> bool {
-        self.is_side_check(self.side_to_move)
+        self.is_side_check(self.side_to_move())
     }
 
     #[inline(always)]
     pub fn is_illegal(&self) -> bool {
-        self.is_side_check(!self.side_to_move)
+        self.is_side_check(!self.side_to_move())
     }
 
     fn is_side_check(&self, color: Color) -> bool {

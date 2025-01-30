@@ -7,12 +7,7 @@ pub fn generate_moves(f: &mut impl Write, ranks: [Bitboard; 8]) {
     generate_captures(f);
     write!(
         f,
-        "
-        const DOUBLE_PUSHES: [Bitboard; 2] = [Bitboard({}), Bitboard({})];
-        pub const PROMOTION_SQUARES: Bitboard = Bitboard({});
-        ",
-        (ranks[1] | ranks[3]).0,
-        (ranks[6] | ranks[4]).0,
+        "pub const PROMOTION_SQUARES: Bitboard = Bitboard({});",
         (ranks[0] | ranks[7]).0,
     ).unwrap();
 }
