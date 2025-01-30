@@ -5,7 +5,8 @@ include!(concat!(env!("OUT_DIR"), "/pawn.rs"));
 /// Get the possible advancing moves of a pawn.
 #[inline(always)]
 pub fn advances(color: Color, square: Square, blockers: Bitboard) -> Bitboard {
-    let adv = ADVANCES[color as usize][square.to_usize()];
+    // SAFETY: `square` < 64
+    let adv = unsafe { *ADVANCES[color as usize].get_unchecked(square.to_usize()) };
     (if (adv & blockers).is_empty() {
         adv
     } else {
@@ -16,7 +17,8 @@ pub fn advances(color: Color, square: Square, blockers: Bitboard) -> Bitboard {
 /// Get the possible capturing moves of a pawn.
 #[inline(always)]
 pub fn captures(color: Color, square: Square) -> Bitboard {
-    CAPTURES[color as usize][square.to_usize()]
+    // SAFETY: `square` < 64
+    unsafe { *CAPTURES[color as usize].get_unchecked(square.to_usize()) }
 }
 
 #[inline(always)]

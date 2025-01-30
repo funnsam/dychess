@@ -108,7 +108,7 @@ pub fn gen<F: Fn(Bitboard, Square) -> Bitboard>(
     }
     write!(f, "];").unwrap();
     write!(f, "\
-#[inline(always)]
+#[inline(always)] \
 pub(crate) fn {}_moves(square: Square, blockers: Bitboard) -> Bitboard {{ \
     unsafe {{ \
         let (magic, table): &(_, &_) = {name}.get_unchecked(square.to_usize()); \

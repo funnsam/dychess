@@ -4,7 +4,8 @@ include!(concat!(env!("OUT_DIR"), "/king.rs"));
 
 /// Get the possible moves of a king on a certain square.
 pub fn moves(square: Square) -> Bitboard {
-    MOVES[square.to_usize()]
+    // SAFETY: `square` < 64
+    unsafe { *MOVES.get_unchecked(square.to_usize()) }
 }
 
 /// Get the squares required not to be under attacked when castling.
