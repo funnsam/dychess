@@ -55,18 +55,15 @@ impl Board {
                 }
             },
             Piece::Rook => {
-                if (mov.from() == Square::A1 && self.side_to_move() == Color::White) ||
-                    (mov.from() == Square::A8 && self.side_to_move() == Color::Black)
-                {
-                    self.castle_rights[self.side_to_move() as usize].disallow_queen_side()
-                } else if (mov.from() == Square::H1 && self.side_to_move() == Color::White) ||
-                    (mov.from() == Square::H8 && self.side_to_move() == Color::Black)
-                {
-                    self.castle_rights[self.side_to_move() as usize].disallow_king_side()
+                if mov.from() == Square::new(File::H, self.side_to_move().back_rank()) {
+                    self.disallow_king_side_castle(self.side_to_move());
+                } else if mov.from() == Square::new(File::A, self.side_to_move().back_rank()) {
+                    self.disallow_queen_side_castle(self.side_to_move());
                 }
             },
             Piece::King => {
-                self.castle_rights[self.side_to_move() as usize].disallow_castling();
+                self.disallow_queen_side_castle(self.side_to_move());
+                self.disallow_king_side_castle(self.side_to_move());
 
                 if self.chess960 && capture == Some((Piece::Rook, self.side_to_move())) {
                     todo!("chess960 castling");
@@ -107,6 +104,56 @@ impl Board {
         self.hash ^= zobrist::SIDE_TO_MOVE;
     }
 
+    pub(crate) fn allow_queen_side_castle(&mut self, color: Color) {
+        if !self.castle_rights[color as usize].queen_side() {
+            self.hash ^= zobrist::CASTLE[color as usize * 2 + 1];
+        }
+        self.castle_rights[color as usize].allow_queen_side();
+    }
+
+    pub(crate) fn allow_king_side_castle(&mut self, color: Color) {
+        if !self.castle_rights[color as usize].king_side() {
+            self.hash ^= zobrist::CASTLE[color as usize * 2];
+        }
+        self.castle_rights[color as usize].allow_king_side();
+    }
+
+    pub(crate) fn disallow_queen_side_castle(&mut self, color: Color) {
+        if self.castle_rights[color as usize].queen_side() {
+            self.hash ^= zobrist::CASTLE[color as usize * 2 + 1];
+        }
+        self.castle_rights[color as usize].disallow_queen_side();
+    }
+
+    pub(crate) fn disallow_king_side_castle(&mut self, color: Color) {
+        if self.castle_rights[color as usize].king_side() {
+            self.hash ^= zobrist::CASTLE[color as usize * 2];
+        }
+        self.castle_rights[color as usize].disallow_king_side();
+    }
+
+    /// Get the hash of this position. This function is the same as the one used in the polyglot
+    /// books, so that polyglot book lookup is very fast and easy.
+    pub fn get_hash(&self) -> u64 {
+        if let Some(f) = self.en_passant {
+            let r = pawn::double_push_to(!self.side_to_move());
+
+            let p = self.pawns_of(self.side_to_move());
+            let mut s = Bitboard::default();
+
+            if let Some(p) = f.left(1) { s |= Bitboard::from(p) };
+            if let Some(p) = f.right(1) { s |= Bitboard::from(p) };
+
+            if !(r & s & p).is_empty() {
+                self.hash ^ zobrist::EP_FILE[f as usize]
+            } else {
+                self.hash
+            }
+        } else {
+            self.hash
+        }
+    }
+
     /// Pass this move to the side to move.
     ///
     /// # Notes
@@ -116,17 +163,21 @@ impl Board {
     /// This returns a [`BoardUnpasser`] to undo this passing move by calling
     /// [`Self::restore_passed`].
     #[inline(always)]
-    pub fn pass_move(&mut self) -> BoardUnpasser {
+    pub fn null_move(&mut self) -> NullMoveRestorer {
         self.side_to_move = !self.side_to_move();
-        BoardUnpasser {
+        self.hash ^= zobrist::SIDE_TO_MOVE;
+
+        NullMoveRestorer {
             en_passant: core::mem::take(&mut self.en_passant),
         }
     }
 
     /// Restore a passed move that was made by [`Self::pass_move`].
     #[inline(always)]
-    pub fn restore_passed(&mut self, unpasser: BoardUnpasser) {
+    pub fn restore_null_move(&mut self, unpasser: NullMoveRestorer) {
         self.side_to_move = !self.side_to_move();
+        self.hash ^= zobrist::SIDE_TO_MOVE;
+
         self.en_passant = unpasser.en_passant;
     }
 
@@ -143,7 +194,7 @@ impl Board {
         self.pieces[piece as usize] |= to_bb;
         self.colors[color as usize] |= to_bb;
         self.mailbox[square.to_usize()] = mailbox_element(color, piece);
-        self.hash ^= zobrist::piece(piece, square);
+        self.hash ^= zobrist::piece(piece, color, square);
     }
 
     #[inline(always)]
@@ -156,7 +207,7 @@ impl Board {
             self.pieces[piece as usize] ^= bb;
             self.colors[color as usize] ^= bb;
             self.mailbox[square.to_usize()] = 0;
-            self.hash ^= zobrist::piece(piece, square);
+            self.hash ^= zobrist::piece(piece, color, square);
         }
 
         piece
@@ -283,6 +334,6 @@ impl core::hash::Hash for Board {
 }
 
 #[derive(Debug)]
-pub struct BoardUnpasser {
+pub struct NullMoveRestorer {
     en_passant: Option<File>,
 }

@@ -5,7 +5,7 @@ impl Board {
         Self {
             pieces: [Bitboard::default(); 6],
             colors: [Bitboard::default(); 2],
-            side_to_move: Color::White,
+            side_to_move: Color::Black,
 
             mailbox: [0; 64],
 

@@ -50,10 +50,10 @@ impl Board {
         loop {
             match fen.next() {
                 // TODO: chess960 castling
-                Some('K') => board.castle_rights[0].allow_king_side(),
-                Some('Q') => board.castle_rights[0].allow_queen_side(),
-                Some('k') => board.castle_rights[1].allow_king_side(),
-                Some('q') => board.castle_rights[1].allow_queen_side(),
+                Some('K') => board.allow_king_side_castle(Color::White),
+                Some('Q') => board.allow_queen_side_castle(Color::White),
+                Some('k') => board.allow_king_side_castle(Color::Black),
+                Some('q') => board.allow_queen_side_castle(Color::Black),
                 Some(' ') => break,
                 Some('-') => match fen.next() {
                     Some(' ') => break,
@@ -104,7 +104,7 @@ impl Board {
         }
 
         self.side_to_move = match fen.next() {
-            Some('w') => Color::White,
+            Some('w') => { self.hash ^= zobrist::SIDE_TO_MOVE; Color::White },
             Some('b') => Color::Black,
             Some(ch) => return Err(FenError::UnexpectedChar(ch)),
             None => return Err(FenError::UnexpectedEnd),
