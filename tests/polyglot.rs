@@ -29,3 +29,22 @@ fn polyglot_hash() {
     let board = Board::from_epd(false, "rnbqkbnr/p1pppppp/8/8/P6P/R1p5/1P1PPPP1/1NBQKBNR b Kkq - 0 4").unwrap();
     assert_eq!(board.get_hash(), 0x5c3f9b829b279560);
 }
+
+#[test]
+fn zobrist_transposition() {
+    let mut board = Board::default();
+    board.make_move(Move::new(Square::E2, Square::E4, None));
+    board.make_move(Move::new(Square::C7, Square::C5, None));
+    board.make_move(Move::new(Square::B1, Square::C3, None));
+    board.make_move(Move::new(Square::G8, Square::F6, None));
+    let hash1 = board.get_hash();
+
+    let mut board = Board::default();
+    board.make_move(Move::new(Square::B1, Square::C3, None));
+    board.make_move(Move::new(Square::G8, Square::F6, None));
+    board.make_move(Move::new(Square::E2, Square::E4, None));
+    board.make_move(Move::new(Square::C7, Square::C5, None));
+    let hash2 = board.get_hash();
+
+    assert_eq!(hash1, hash2);
+}
