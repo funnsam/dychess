@@ -2,7 +2,8 @@ use crate::prelude::*;
 
 pub mod fen;
 pub mod movegen;
-pub mod util;
+mod util;
+mod zobrist;
 
 /// A chess board.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -103,6 +104,7 @@ impl Board {
         self.en_passant = (piece == Piece::Pawn && (move_bb & pawn::double_pushes(self.side_to_move())) == move_bb)
             .then_some(mov.from().file());
         self.side_to_move = !self.side_to_move();
+        self.hash ^= zobrist::SIDE_TO_MOVE;
     }
 
     /// Pass this move to the side to move.
@@ -141,7 +143,7 @@ impl Board {
         self.pieces[piece as usize] |= to_bb;
         self.colors[color as usize] |= to_bb;
         self.mailbox[square.to_usize()] = mailbox_element(color, piece);
-        // TODO: update hash
+        self.hash ^= zobrist::piece(piece, square);
     }
 
     #[inline(always)]
@@ -154,7 +156,7 @@ impl Board {
             self.pieces[piece as usize] ^= bb;
             self.colors[color as usize] ^= bb;
             self.mailbox[square.to_usize()] = 0;
-            // TODO: update hash
+            self.hash ^= zobrist::piece(piece, square);
         }
 
         piece
