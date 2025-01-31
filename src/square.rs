@@ -57,6 +57,48 @@ impl Square {
     pub const fn rank(self) -> Rank {
         Rank::ALL[(self.0 >> 3) as usize]
     }
+
+    /// Get the square `n` files to the right, wrapping around if it will overflow.
+    #[inline(always)]
+    pub const fn right_wrap(self, n: u8) -> Self {
+        Self((self.0 + n) % 64)
+    }
+
+    /// Get the square `n` files to the right, wrapping around if it will overflow.
+    #[inline(always)]
+    pub const fn left_wrap(self, n: u8) -> Self {
+        Self((self.0 + 64 - n % 64) % 64)
+    }
+
+    /// Get the square `n` ranks up, wrapping around if it will overflow.
+    #[inline(always)]
+    pub const fn up_wrap(self, n: u8) -> Self {
+        Self((self.0 + n * 8) % 64)
+    }
+
+    /// Get the square `n` ranks down, wrapping around if it will overflow.
+    #[inline(always)]
+    pub const fn down_wrap(self, n: u8) -> Self {
+        Self((self.0 + 64 - n * 8 % 64) % 64)
+    }
+
+    /// Get the square forward, wrapping around if it will overflow.
+    #[inline(always)]
+    pub const fn forward_wrap(self, color: Color, n: u8) -> Self {
+        match color {
+            Color::White => self.up_wrap(n),
+            Color::Black => self.down_wrap(n),
+        }
+    }
+
+    /// Get the square backward, wrapping around if it will overflow.
+    #[inline(always)]
+    pub const fn backward_wrap(self, color: Color, n: u8) -> Self {
+        match color {
+            Color::White => self.down_wrap(n),
+            Color::Black => self.up_wrap(n),
+        }
+    }
 }
 
 /// A file (or column).
@@ -175,7 +217,7 @@ impl Rank {
         Some(Self::ALL[self as usize - n])
     }
 
-    /// Get the rank forward and wrap around if overflowed.
+    /// Get the rank forward, wrapping around if it will overflow.
     #[inline(always)]
     pub const fn forward_wrap(self, color: Color, n: usize) -> Self {
         match color {
@@ -193,7 +235,7 @@ impl Rank {
         }
     }
 
-    /// Get the rank backward and wrap around if overflowed.
+    /// Get the rank backward, wrapping around if it will overflow.
     #[inline(always)]
     pub const fn backward_wrap(self, color: Color, n: usize) -> Self {
         match color {
