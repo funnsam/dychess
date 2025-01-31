@@ -38,9 +38,14 @@ pub fn double_push_to(color: Color) -> Bitboard {
 }
 
 #[inline(always)]
-pub fn ep_targets(color: Color) -> Bitboard {
+pub fn ep_target_rank(color: Color) -> Rank {
     match color {
-        Color::White => Rank::_6.into(),
-        Color::Black => Rank::_3.into(),
+        Color::White => Rank::_6,
+        Color::Black => Rank::_3,
     }
+}
+
+#[inline(always)]
+pub fn ep_targets(color: Color) -> Bitboard {
+    ep_target_rank(color).into()
 }

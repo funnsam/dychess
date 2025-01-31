@@ -23,7 +23,7 @@ fn test_perft() {
 }
 
 fn test(pos: &str, expected: &[u64]) {
-    let board = Board::from_fen(false, pos).expect(pos);
+    let board = Board::from_epd(false, pos).expect(pos);
 
     for (i, expected) in expected.into_iter().enumerate() {
         assert_eq!(perft::<true>(&board, i + 1), *expected, "{pos} ; D{}", i + 1);

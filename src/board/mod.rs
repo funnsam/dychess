@@ -1,6 +1,6 @@
 use crate::prelude::*;
 
-pub mod fen;
+pub mod epd;
 pub mod movegen;
 mod util;
 mod zobrist;
@@ -27,9 +27,9 @@ pub struct Board {
 impl Default for Board {
     #[inline(always)]
     fn default() -> Self {
-        Board::from_fen(
+        Board::from_epd(
             false,
-            "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+            "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -",
         ).expect("valid position")
     }
 }
