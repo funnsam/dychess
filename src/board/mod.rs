@@ -110,7 +110,7 @@ impl Board {
         if capture == Some((Piece::Rook, !self.side_to_move())) {
             if mov.to() == Square::new(File::H, (!self.side_to_move()).back_rank()) {
                 self.disallow_king_side_castle(!self.side_to_move());
-            } else if mov.from() == Square::new(File::A, (!self.side_to_move()).back_rank()) {
+            } else if mov.to() == Square::new(File::A, (!self.side_to_move()).back_rank()) {
                 self.disallow_queen_side_castle(!self.side_to_move());
             }
         }
