@@ -303,6 +303,17 @@ impl Board {
         atkdef
     }
 
+    pub fn attackers(&self, square: Square, consider: Bitboard) -> Bitboard {
+        let mut attackers = Bitboard::default();
+        for sq in consider {
+            let (piece, color) = self.piece_and_color_on(sq).unwrap();
+            if !(self.piece_targets::<true>(color, piece, sq) & square.into()).is_empty() {
+                attackers |= sq.into();
+            }
+        }
+        attackers
+    }
+
     // #[doc(hidden)]
     // pub fn _check_legality(&self) {
     //     assert_eq!(self.pieces.into_iter().fold(Bitboard::default(), |a, p| {
