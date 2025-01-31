@@ -23,6 +23,13 @@ impl Square {
         Self(idx)
     }
 
+    /// Make a new square from an index without checking. This can result in UB if not done
+    /// carefully.
+    #[inline(always)]
+    pub const unsafe fn from_index_unchecked(idx: u8) -> Self {
+        Self(idx)
+    }
+
     /// Get the square in the point of view of the given color.
     #[inline(always)]
     pub const fn pov(self, color: Color) -> Self {

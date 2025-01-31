@@ -146,24 +146,18 @@ impl IntoIterator for Bitboard {
     type IntoIter = BitboardIter;
 
     fn into_iter(self) -> Self::IntoIter {
-        BitboardIter {
-            remaining: self,
-            at: 0,
-        }
+        BitboardIter(self)
     }
 }
 
 #[derive(Debug, Clone, Copy, Hash)]
-pub struct BitboardIter {
-    remaining: Bitboard,
-    at: usize,
-}
+pub struct BitboardIter(Bitboard);
 
 impl BitboardIter {
     /// Get whether the iterator is empty or not. This is a faster way to do `self.len() == 0`.
     #[inline(always)]
     pub fn had_emptied(&self) -> bool {
-        self.remaining.0 == 0
+        self.0.is_empty()
     }
 }
 
@@ -173,21 +167,16 @@ impl Iterator for BitboardIter {
     #[inline(always)]
     fn next(&mut self) -> Option<Self::Item> {
         (!self.had_emptied()).then(|| {
-            if self.remaining.0 != 0x8000_0000_0000_0000 {
-                let tz = self.remaining.0.trailing_zeros();
-                self.remaining.0 >>= tz + 1;
-                self.at += tz as usize + 1;
-            } else {
-                self.remaining.0 = 0;
-                self.at += 64;
-            }
-            unsafe { *Square::ALL.get_unchecked(self.at - 1) }
+            let tz = self.0.0.trailing_zeros();
+            self.0.0 &= self.0.0 - 1;
+
+            unsafe { Square::from_index_unchecked(tz as u8) }
         })
     }
 
     #[inline(always)]
     fn size_hint(&self) -> (usize, Option<usize>) {
-        let popcnt = self.remaining.popcnt() as usize;
+        let popcnt = self.0.popcnt() as usize;
         (popcnt, Some(popcnt))
     }
 }
