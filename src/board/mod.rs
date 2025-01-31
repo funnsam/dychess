@@ -107,6 +107,14 @@ impl Board {
             _ => {},
         }
 
+        if capture == Some((Piece::Rook, !self.side_to_move())) {
+            if mov.to() == Square::new(File::H, (!self.side_to_move()).back_rank()) {
+                self.disallow_king_side_castle(!self.side_to_move());
+            } else if mov.from() == Square::new(File::A, (!self.side_to_move()).back_rank()) {
+                self.disallow_queen_side_castle(!self.side_to_move());
+            }
+        }
+
         self.en_passant = (piece == Piece::Pawn && (move_bb & pawn::double_pushes(self.side_to_move())) == move_bb)
             .then_some(mov.from().file());
         self.side_to_move = !self.side_to_move();
@@ -242,8 +250,8 @@ impl Board {
             Piece::King => {
                 let mut moves = king::moves(sq);
 
-                if !ATKDEF && self.castle_rights[color as usize].king_side() {
-                    if let Some(ks_rook) = (self.rooks_of(color) & self.castle_rights[color as usize].king_side_file().into() & color.back_rank().into()).first_square() {
+                if !ATKDEF && self.castle_rights_of(color).king_side() {
+                    if let Some(ks_rook) = (self.rooks_of(color) & self.castle_rights_of(color).king_side_file().into() & color.back_rank().into()).first_square() {
                         if (king::castle_clearance(color, sq.file(), ks_rook.file()) & self.combined()).is_empty()
                             && (king::castle_path(color, sq.file(), ks_rook.file()) & self.side_attack_def(!color)).is_empty()
                         {
@@ -252,8 +260,8 @@ impl Board {
                     }
                 }
 
-                if !ATKDEF && self.castle_rights[color as usize].queen_side() {
-                    if let Some(qs_rook) = (self.rooks_of(color) & self.castle_rights[color as usize].queen_side_file().into() & color.back_rank().into()).first_square() {
+                if !ATKDEF && self.castle_rights_of(color).queen_side() {
+                    if let Some(qs_rook) = (self.rooks_of(color) & self.castle_rights_of(color).queen_side_file().into() & color.back_rank().into()).first_square() {
                         if (king::castle_clearance(color, sq.file(), qs_rook.file()) & self.combined()).is_empty()
                             && (king::castle_path(color, sq.file(), qs_rook.file()) & self.side_attack_def(!color)).is_empty()
                         {

@@ -212,4 +212,29 @@ impl Board {
             .try_into()
             .expect("there should only be a king for each side")
     }
+
+    /// Get the castle rights of a side.
+    #[inline(always)]
+    #[must_use]
+    pub const fn castle_rights_of(&self, color: Color) -> CastleRights { self.castle_rights[color as usize] }
+
+    /// Get the castle rights of white.
+    #[inline(always)]
+    #[must_use]
+    pub const fn white_castle_rights(&self) -> CastleRights { self.castle_rights_of(Color::White) }
+
+    /// Get the castle rights of black.
+    #[inline(always)]
+    #[must_use]
+    pub const fn black_castle_rights(&self) -> CastleRights { self.castle_rights_of(Color::Black) }
+
+    /// Get the castle rights of the side to move.
+    #[inline(always)]
+    #[must_use]
+    pub const fn our_castle_rights(&self) -> CastleRights { self.castle_rights_of(self.side_to_move()) }
+
+    /// Get the castle rights of the side to move's opponent.
+    #[inline(always)]
+    #[must_use]
+    pub fn their_castle_rights(&self) -> CastleRights { self.castle_rights_of(!self.side_to_move()) }
 }
