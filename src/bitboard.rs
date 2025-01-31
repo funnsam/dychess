@@ -18,14 +18,15 @@ impl From<File> for Bitboard {
     /// The bitboard with a vertical line on the given file.
     #[inline(always)]
     fn from(value: File) -> Self {
-        Self::FILES[value as usize]
+        Self(0x0101010101010101_u64 << value as u8)
     }
 }
 
 impl From<Rank> for Bitboard {
+    /// The bitboard with a horizontal line on the given rank.
     #[inline(always)]
     fn from(value: Rank) -> Self {
-        Self::RANKS[value as usize]
+        Self(0xff << (value as u8 * 8))
     }
 }
 
@@ -72,12 +73,6 @@ impl Bitboard {
 
     /// The 4 edges of the board combined.
     pub const EDGE: Self = crate::bb_data::EDGE;
-
-    /// Each file on the board.
-    pub const FILES: [Self; 8] = crate::bb_data::FILES;
-
-    /// Each rank on the board.
-    pub const RANKS: [Self; 8] = crate::bb_data::RANKS;
 }
 
 impl Deref for Bitboard {

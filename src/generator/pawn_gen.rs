@@ -2,13 +2,13 @@ use std::io::Write;
 
 use crate::{bitboard::Bitboard, color::Color, square::{File, Rank, Square}};
 
-pub fn generate_moves(f: &mut impl Write, ranks: [Bitboard; 8]) {
+pub fn generate_moves(f: &mut impl Write) {
     generate_advances(f);
     generate_captures(f);
     write!(
         f,
         "pub const PROMOTION_SQUARES: Bitboard = Bitboard({});",
-        (ranks[0] | ranks[7]).0,
+        (Bitboard::from(Rank::_1) | Bitboard::from(Rank::_8)).0,
     ).unwrap();
 }
 

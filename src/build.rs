@@ -21,8 +21,6 @@ mod bb_data {
     use crate::bitboard::Bitboard;
 
     pub const EDGE: Bitboard = Bitboard(0);
-    pub const FILES: [Bitboard; 8] = [Bitboard(0); 8];
-    pub const RANKS: [Bitboard; 8] = [Bitboard(0); 8];
     pub const LEFTS: [Bitboard; 8] = [Bitboard(0); 8];
     pub const RIGHTS: [Bitboard; 8] = [Bitboard(0); 8];
 }
