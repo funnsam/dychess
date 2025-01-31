@@ -1,6 +1,6 @@
 use core::ops::{BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, BitXorAssign, Deref, Not};
 
-use crate::square::*;
+use crate::square::{File, Rank, Square};
 
 /// A bitboard.
 #[derive(Default, Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -45,12 +45,14 @@ impl TryFrom<Bitboard> for Square {
 impl Bitboard {
     /// Get if this bitboard is empty.
     #[inline(always)]
+    #[must_use]
     pub const fn is_empty(self) -> bool {
         self.0 == 0
     }
 
     /// Get the first square in this bitboard, or [None] if it is empty.
     #[inline(always)]
+    #[must_use]
     pub const fn first_square(self) -> Option<Square> {
         if self.is_empty() { return None };
 
@@ -59,6 +61,7 @@ impl Bitboard {
 
     /// Get the last square in this bitboard, or [None] if it is empty.
     #[inline(always)]
+    #[must_use]
     pub const fn last_square(self) -> Option<Square> {
         if self.is_empty() { return None };
 
@@ -67,6 +70,7 @@ impl Bitboard {
 
     /// Get the number of set bits in this bitboard.
     #[inline(always)]
+    #[must_use]
     pub const fn popcnt(self) -> u32 {
         self.0.count_ones()
     }
@@ -105,7 +109,7 @@ impl BitAnd for Bitboard {
 impl BitAndAssign for Bitboard {
     #[inline(always)]
     fn bitand_assign(&mut self, rhs: Self) {
-        self.0 &= rhs.0
+        self.0 &= rhs.0;
     }
 }
 
@@ -137,7 +141,7 @@ impl BitXor for Bitboard {
 impl BitXorAssign for Bitboard {
     #[inline(always)]
     fn bitxor_assign(&mut self, rhs: Self) {
-        self.0 ^= rhs.0
+        self.0 ^= rhs.0;
     }
 }
 
@@ -150,13 +154,14 @@ impl IntoIterator for Bitboard {
     }
 }
 
-#[derive(Debug, Clone, Copy, Hash)]
+#[derive(Debug, Clone, Hash)]
 pub struct BitboardIter(Bitboard);
 
 impl BitboardIter {
     /// Get whether the iterator is empty or not. This is a faster way to do `self.len() == 0`.
     #[inline(always)]
-    pub fn had_emptied(&self) -> bool {
+    #[must_use]
+    pub const fn had_emptied(&self) -> bool {
         self.0.is_empty()
     }
 }

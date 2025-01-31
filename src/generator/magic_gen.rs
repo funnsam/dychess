@@ -20,28 +20,28 @@ pub fn generate_tables(f: &mut impl Write, masks: [[Bitboard; 64]; 2]) {
 fn bishop_block(blockers: Bitboard, sq: Square) -> Bitboard {
     let mut res = Bitboard::default();
 
-    for (f, r) in File::ALL[..sq.file() as usize].into_iter().rev().zip(Rank::ALL[..sq.rank() as usize].into_iter().rev()) {
+    for (f, r) in File::ALL[..sq.file() as usize].iter().rev().zip(Rank::ALL[..sq.rank() as usize].iter().rev()) {
         let bb = Square::new(*f, *r).into();
         res |= bb;
 
         if (bb & blockers).0 != 0 { break };
     }
 
-    for (f, r) in File::ALL[..sq.file() as usize].into_iter().rev().zip(Rank::ALL[sq.rank() as usize..].into_iter().skip(1)) {
+    for (f, r) in File::ALL[..sq.file() as usize].iter().rev().zip(Rank::ALL[sq.rank() as usize..].iter().skip(1)) {
         let bb = Square::new(*f, *r).into();
         res |= bb;
 
         if (bb & blockers).0 != 0 { break };
     }
 
-    for (f, r) in File::ALL[sq.file() as usize..].into_iter().skip(1).zip(Rank::ALL[..sq.rank() as usize].into_iter().rev()) {
+    for (f, r) in File::ALL[sq.file() as usize..].iter().skip(1).zip(Rank::ALL[..sq.rank() as usize].iter().rev()) {
         let bb = Square::new(*f, *r).into();
         res |= bb;
 
         if (bb & blockers).0 != 0 { break };
     }
 
-    for (f, r) in File::ALL[sq.file() as usize..].into_iter().skip(1).zip(Rank::ALL[sq.rank() as usize..].into_iter().skip(1)) {
+    for (f, r) in File::ALL[sq.file() as usize..].iter().skip(1).zip(Rank::ALL[sq.rank() as usize..].iter().skip(1)) {
         let bb = Square::new(*f, *r).into();
         res |= bb;
 
@@ -54,26 +54,26 @@ fn bishop_block(blockers: Bitboard, sq: Square) -> Bitboard {
 fn rook_block(blockers: Bitboard, sq: Square) -> Bitboard {
     let mut res = Bitboard::default();
 
-    for f in File::ALL[..sq.file() as usize].into_iter().rev() {
+    for f in File::ALL[..sq.file() as usize].iter().rev() {
         let bb = Square::new(*f, sq.rank()).into();
         res |= bb;
 
         if (bb & blockers).0 != 0 { break };
     }
-    for f in File::ALL[sq.file() as usize..].into_iter().skip(1) {
+    for f in File::ALL[sq.file() as usize..].iter().skip(1) {
         let bb = Square::new(*f, sq.rank()).into();
         res |= bb;
 
         if (bb & blockers).0 != 0 { break };
     }
 
-    for r in Rank::ALL[..sq.rank() as usize].into_iter().rev() {
+    for r in Rank::ALL[..sq.rank() as usize].iter().rev() {
         let bb = Square::new(sq.file(), *r).into();
         res |= bb;
 
         if (bb & blockers).0 != 0 { break };
     }
-    for r in Rank::ALL[sq.rank() as usize..].into_iter().skip(1) {
+    for r in Rank::ALL[sq.rank() as usize..].iter().skip(1) {
         let bb = Square::new(sq.file(), *r).into();
         res |= bb;
 
@@ -89,7 +89,7 @@ pub fn gen<F: Fn(Bitboard, Square) -> Bitboard>(
     masks: [Bitboard; 64],
     block: F,
 ) {
-    write!(f, "pub(crate) static {name}: [(Magic, &[Bitboard]); 64] = [").unwrap();
+    write!(f, "pub static {name}: [(Magic, &[Bitboard]); 64] = [").unwrap();
     for (mut mask, sq) in masks.into_iter().zip(Square::ALL) {
         if sq.file() != File::A { mask &= !Bitboard::from(File::A) };
         if sq.file() != File::H { mask &= !Bitboard::from(File::H) };
@@ -107,7 +107,7 @@ pub fn gen<F: Fn(Bitboard, Square) -> Bitboard>(
     write!(f, "];").unwrap();
     write!(f, "\
 #[inline(always)] \
-pub(crate) fn {}_moves(square: Square, blockers: Bitboard) -> Bitboard {{ \
+pub fn {}_moves(square: Square, blockers: Bitboard) -> Bitboard {{ \
     unsafe {{ \
         let (magic, table): &(_, &_) = {name}.get_unchecked(square.to_usize()); \
         let masked = blockers & magic.mask;

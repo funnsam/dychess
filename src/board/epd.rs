@@ -1,6 +1,6 @@
 use core::{str::Chars, fmt};
 
-use super::*;
+use super::{Board, Color, File, Piece, Rank, Square, pawn, zobrist};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum EpdError {
@@ -28,6 +28,12 @@ impl Board {
     ///
     /// # Note
     /// This function may not return `Err` on all invalid EPD string.
+    ///
+    /// # Errors
+    /// This function errors if the EPD string is not valid enough to make the parser parse it.
+    ///
+    /// # Panics
+    /// This function panics if `chess960` due to incomplete implementation.
     ///
     /// # Example
     /// ```

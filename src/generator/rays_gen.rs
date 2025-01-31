@@ -10,25 +10,25 @@ pub fn generate_rays(f: &mut impl Write) -> [[Bitboard; 64]; 2] {
 
 pub fn generate_bishop(f: &mut impl Write) -> [Bitboard; 64] {
     let mut rays = [Bitboard::default(); 64];
-    write!(f, "pub(crate) static BISHOP: [Bitboard; 64] = [").unwrap();
+    write!(f, "pub static BISHOP: [Bitboard; 64] = [").unwrap();
 
     for rank in Rank::ALL {
         for file in File::ALL {
             let mut bb = Bitboard::default();
 
-            for (f, r) in File::ALL[..file as usize].into_iter().rev().zip(Rank::ALL[..rank as usize].into_iter().rev()) {
+            for (f, r) in File::ALL[..file as usize].iter().rev().zip(Rank::ALL[..rank as usize].iter().rev()) {
                 bb |= Square::new(*f, *r).into();
             }
 
-            for (f, r) in File::ALL[..file as usize].into_iter().rev().zip(Rank::ALL[rank as usize..].into_iter().skip(1)) {
+            for (f, r) in File::ALL[..file as usize].iter().rev().zip(Rank::ALL[rank as usize..].iter().skip(1)) {
                 bb |= Square::new(*f, *r).into();
             }
 
-            for (f, r) in File::ALL[file as usize..].into_iter().skip(1).zip(Rank::ALL[..rank as usize].into_iter().rev()) {
+            for (f, r) in File::ALL[file as usize..].iter().skip(1).zip(Rank::ALL[..rank as usize].iter().rev()) {
                 bb |= Square::new(*f, *r).into();
             }
 
-            for (f, r) in File::ALL[file as usize..].into_iter().skip(1).zip(Rank::ALL[rank as usize..].into_iter().skip(1)) {
+            for (f, r) in File::ALL[file as usize..].iter().skip(1).zip(Rank::ALL[rank as usize..].iter().skip(1)) {
                 bb |= Square::new(*f, *r).into();
             }
 
@@ -43,7 +43,7 @@ pub fn generate_bishop(f: &mut impl Write) -> [Bitboard; 64] {
 
 pub fn generate_rook(f: &mut impl Write) -> [Bitboard; 64] {
     let mut rays = [Bitboard::default(); 64];
-    write!(f, "pub(crate) static ROOK: [Bitboard; 64] = [").unwrap();
+    write!(f, "pub static ROOK: [Bitboard; 64] = [").unwrap();
 
     for rank in Rank::ALL {
         for file in File::ALL {

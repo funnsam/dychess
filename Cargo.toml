@@ -2,6 +2,11 @@
 name = "dychess"
 version = "0.1.0"
 edition = "2021"
+description = "A chess library for chess engines."
+license = "BSD-2-Clause-Patent"
+repository = "https://github.com/funnsam/dychess"
+keywords = ["chess"]
+categories = ["no-std::no-alloc"]
 build = "src/build.rs"
 
 [dependencies]

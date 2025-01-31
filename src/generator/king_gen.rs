@@ -90,6 +90,7 @@ fn generate_castle_paths(f: &mut impl Write) {
 
 fn generate_castle_moves(f: &mut impl Write) {
     write!(f, "
+        #[allow(clippy::doc_markdown)]
         /// All move to square combined ORed with king initial square for normal chess castling
         /// detection.
         pub const CASTLE_MOVE: Bitboard = Bitboard(

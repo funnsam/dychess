@@ -9,6 +9,7 @@ pub struct Square(u8);
 impl Square {
     /// Make a new square from a file and rank.
     #[inline(always)]
+    #[must_use]
     pub const fn new(file: File, rank: Rank) -> Self {
         Self(((rank as u8) << 3) | (file as u8))
     }
@@ -18,20 +19,26 @@ impl Square {
     /// # Panics
     /// It will panic if `idx > 63`.
     #[inline(always)]
+    #[must_use]
     pub const fn from_index(idx: u8) -> Self {
         assert!(idx < 64);
         Self(idx)
     }
 
-    /// Make a new square from an index without checking. This can result in UB if not done
-    /// carefully.
+    /// Make a new square from an index without checking.
+    ///
+    /// # Safety
+    /// This function is safe if `idx < 64`, otherwise the safety depends on the function that is
+    /// called with this square.
     #[inline(always)]
+    #[must_use]
     pub const unsafe fn from_index_unchecked(idx: u8) -> Self {
         Self(idx)
     }
 
     /// Get the square in the point of view of the given color.
     #[inline(always)]
+    #[must_use]
     pub const fn pov(self, color: Color) -> Self {
         match color {
             Color::White => self,
@@ -41,56 +48,66 @@ impl Square {
 
     /// Get the square in the point of view of black.
     #[inline(always)]
+    #[must_use]
     pub const fn black_pov(self) -> Self {
         Self(self.0 ^ 0b111_000)
     }
 
     /// Converts this square to an `u8`.
     #[inline(always)]
+    #[must_use]
     pub const fn to_u8(self) -> u8 { self.0 as _ }
 
     /// Converts this square to an `usize`.
     #[inline(always)]
+    #[must_use]
     pub const fn to_usize(self) -> usize { self.0 as _ }
 
     /// The file of this square.
     #[inline(always)]
+    #[must_use]
     pub const fn file(self) -> File {
         File::ALL[self.0 as usize & 7]
     }
 
     /// The rank of this square.
     #[inline(always)]
+    #[must_use]
     pub const fn rank(self) -> Rank {
         Rank::ALL[(self.0 >> 3) as usize]
     }
 
     /// Get the square `n` files to the right, wrapping around if it will overflow.
     #[inline(always)]
+    #[must_use]
     pub const fn right_wrap(self, n: u8) -> Self {
         Self((self.0 + n) % 64)
     }
 
     /// Get the square `n` files to the right, wrapping around if it will overflow.
     #[inline(always)]
+    #[must_use]
     pub const fn left_wrap(self, n: u8) -> Self {
         Self((self.0 + 64 - n % 64) % 64)
     }
 
     /// Get the square `n` ranks up, wrapping around if it will overflow.
     #[inline(always)]
+    #[must_use]
     pub const fn up_wrap(self, n: u8) -> Self {
         Self((self.0 + n * 8) % 64)
     }
 
     /// Get the square `n` ranks down, wrapping around if it will overflow.
     #[inline(always)]
+    #[must_use]
     pub const fn down_wrap(self, n: u8) -> Self {
         Self((self.0 + 64 - n * 8 % 64) % 64)
     }
 
     /// Get the square forward, wrapping around if it will overflow.
     #[inline(always)]
+    #[must_use]
     pub const fn forward_wrap(self, color: Color, n: u8) -> Self {
         match color {
             Color::White => self.up_wrap(n),
@@ -100,6 +117,7 @@ impl Square {
 
     /// Get the square backward, wrapping around if it will overflow.
     #[inline(always)]
+    #[must_use]
     pub const fn backward_wrap(self, color: Color, n: u8) -> Self {
         match color {
             Color::White => self.down_wrap(n),
@@ -127,12 +145,14 @@ impl File {
 
     /// Get the file `n` files to the right, wrapping around if it will overflow.
     #[inline(always)]
+    #[must_use]
     pub const fn right_wrap(self, n: usize) -> Self {
         Self::ALL[(self as usize + n) % 8]
     }
 
     /// Get the file `n` files to the right;
     #[inline(always)]
+    #[must_use]
     pub const fn right(self, n: usize) -> Option<Self> {
         let idx = self as usize + n;
         if idx >= 8 {
@@ -144,12 +164,14 @@ impl File {
 
     /// Get the file `n` files to the left, wrapping around if it will underflow.
     #[inline(always)]
+    #[must_use]
     pub const fn left_wrap(self, n: usize) -> Self {
         Self::ALL[(self as usize + 8 - n % 8) % 8]
     }
 
     /// Get the file `n` files to the left.
     #[inline(always)]
+    #[must_use]
     pub const fn left(self, n: usize) -> Option<Self> {
         if (self as usize) < n {
             return None;
@@ -160,12 +182,14 @@ impl File {
 
     /// Get all squares to the left of this file.
     #[inline(always)]
+    #[must_use]
     pub const fn left_side(self) -> Bitboard {
         crate::bb_data::LEFTS[self as usize]
     }
 
     /// Get all squares to the right of this file.
     #[inline(always)]
+    #[must_use]
     pub const fn right_side(self) -> Bitboard {
         crate::bb_data::RIGHTS[self as usize]
     }
@@ -176,8 +200,9 @@ impl Rank {
         Self::_1, Self::_2, Self::_3, Self::_4, Self::_5, Self::_6, Self::_7, Self::_8
     ];
 
-    /// Calls [Self::invert] if `color` is black, otherwise returns `self`.
+    /// Calls [`Self::invert`] if `color` is black, otherwise returns `self`.
     #[inline(always)]
+    #[must_use]
     pub const fn invert_if_black(self, color: Color) -> Self {
         match color {
             Color::White => self,
@@ -187,18 +212,21 @@ impl Rank {
 
     /// Invert the rank.
     #[inline(always)]
+    #[must_use]
     pub const fn invert(self) -> Self {
         Self::ALL[self as usize ^ 7]
     }
 
     /// Get the rank `n` ranks up, wrapping around if it will overflow.
     #[inline(always)]
+    #[must_use]
     pub const fn up_wrap(self, n: usize) -> Self {
         Self::ALL[(self as usize + n) % 8]
     }
 
     /// Get the rank `n` ranks up.
     #[inline(always)]
+    #[must_use]
     pub const fn up(self, n: usize) -> Option<Self> {
         let idx = self as usize + n;
         if idx >= 8 {
@@ -210,12 +238,14 @@ impl Rank {
 
     /// Get the rank `n` ranks down, wrapping around if it will underflow.
     #[inline(always)]
+    #[must_use]
     pub const fn down_wrap(self, n: usize) -> Self {
         Self::ALL[(self as usize + 8 - n % 8) % 8]
     }
 
     /// Get the rank `n` ranks down.
     #[inline(always)]
+    #[must_use]
     pub const fn down(self, n: usize) -> Option<Self> {
         if (self as usize) < n {
             return None;
@@ -226,6 +256,7 @@ impl Rank {
 
     /// Get the rank forward, wrapping around if it will overflow.
     #[inline(always)]
+    #[must_use]
     pub const fn forward_wrap(self, color: Color, n: usize) -> Self {
         match color {
             Color::White => self.up_wrap(n),
@@ -235,6 +266,7 @@ impl Rank {
 
     /// Get the rank forward.
     #[inline(always)]
+    #[must_use]
     pub const fn forward(self, color: Color, n: usize) -> Option<Self> {
         match color {
             Color::White => self.up(n),
@@ -244,6 +276,7 @@ impl Rank {
 
     /// Get the rank backward, wrapping around if it will overflow.
     #[inline(always)]
+    #[must_use]
     pub const fn backward_wrap(self, color: Color, n: usize) -> Self {
         match color {
             Color::White => self.down_wrap(n),
@@ -253,6 +286,7 @@ impl Rank {
 
     /// Get the rank backward.
     #[inline(always)]
+    #[must_use]
     pub const fn backward(self, color: Color, n: usize) -> Option<Self> {
         match color {
             Color::White => self.down(n),

@@ -1,4 +1,4 @@
-use super::*;
+use super::{Bitboard, BitboardIter, Board, Move, Piece, Square, pawn};
 
 /// A staged pseudo-legal move generator.
 pub struct MoveGen<'a, const CAPTURES: bool> {
@@ -17,6 +17,7 @@ impl Board {
     /// Generate pseudo-legal moves that can be iterated with a list of moves that are prioritized
     /// over other moves.
     #[inline(always)]
+    #[must_use]
     pub fn pseudo_legal_moves<'a>(&'a self, priority: &'a [Move]) -> MoveGen<'a, false> {
         MoveGen {
             board: self,
@@ -34,6 +35,7 @@ impl Board {
     /// Generate pseudo-legal captures that can be iterated with a list of moves that are
     /// prioritized over other moves.
     #[inline(always)]
+    #[must_use]
     pub fn pseudo_legal_captures<'a>(&'a self, priority: &'a [Move]) -> MoveGen<'a, true> {
         MoveGen {
             board: self,
@@ -49,7 +51,7 @@ impl Board {
     }
 }
 
-impl<'a, const CAPTURES: bool> MoveGen<'a, CAPTURES> {
+impl<const CAPTURES: bool> MoveGen<'_, CAPTURES> {
     #[inline(always)]
     fn try_next(&mut self) -> Option<Result<Move, ()>> {
         let target_mask = if CAPTURES { self.board.combined() } else { !Bitboard::default() };
@@ -66,11 +68,7 @@ impl<'a, const CAPTURES: bool> MoveGen<'a, CAPTURES> {
                 let targets = self.board.piece_targets::<false>(self.board.side_to_move(), piece, candidate.from())
                     & target_mask;
 
-                if !(targets & candidate.to().into()).is_empty() {
-                    Some(Ok(candidate))
-                } else {
-                    Some(Err(()))
-                }
+                Some((!(targets & candidate.to().into()).is_empty()).then_some(candidate).ok_or(()))
             } else {
                 Some(Err(()))
             };
@@ -118,7 +116,7 @@ impl<'a, const CAPTURES: bool> MoveGen<'a, CAPTURES> {
     }
 }
 
-impl<'a, const CAPTURES: bool> Iterator for MoveGen<'a, CAPTURES> {
+impl<const CAPTURES: bool> Iterator for MoveGen<'_, CAPTURES> {
     type Item = Move;
 
     fn next(&mut self) -> Option<Move> {
@@ -130,4 +128,4 @@ impl<'a, const CAPTURES: bool> Iterator for MoveGen<'a, CAPTURES> {
     }
 }
 
-impl<'a, const CAPTURES: bool> core::iter::FusedIterator for MoveGen<'a, CAPTURES> {}
+impl<const CAPTURES: bool> core::iter::FusedIterator for MoveGen<'_, CAPTURES> {}

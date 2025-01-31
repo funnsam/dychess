@@ -27,7 +27,7 @@ pub struct Board {
 impl Default for Board {
     #[inline(always)]
     fn default() -> Self {
-        Board::from_epd(
+        Self::from_epd(
             false,
             "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -",
         ).expect("valid position")
@@ -35,13 +35,22 @@ impl Default for Board {
 }
 
 impl Board {
+    /// Make a move on a new cloned board.
+    ///
+    /// # Panics
+    /// This function panics if the move's `from` square is empty.
     #[inline(always)]
+    #[must_use]
     pub fn copy_make_move(&self, mov: Move) -> Self {
         let mut after = self.clone();
         after.make_move(mov);
         after
     }
 
+    /// Make a move on the board.
+    ///
+    /// # Panics
+    /// This function panics if the move's `from` square is empty.
     pub fn make_move(&mut self, mov: Move) {
         let move_bb = Bitboard::from(mov.from()) | mov.to().into();
         let (piece, _) = self.erase_piece(mov.from())
@@ -134,8 +143,9 @@ impl Board {
 
     /// Get the hash of this position. This function is the same as the one used in the polyglot
     /// books, so that polyglot book lookup is very fast and easy.
+    #[must_use]
     pub fn get_hash(&self) -> u64 {
-        if let Some(f) = self.en_passant {
+        self.en_passant.map_or(self.hash, |f| {
             let r = pawn::double_push_to(!self.side_to_move());
 
             let p = self.pawns_of(self.side_to_move());
@@ -144,14 +154,12 @@ impl Board {
             if let Some(p) = f.left(1) { s |= Bitboard::from(p) };
             if let Some(p) = f.right(1) { s |= Bitboard::from(p) };
 
-            if !(r & s & p).is_empty() {
-                self.hash ^ zobrist::EP_FILE[f as usize]
-            } else {
+            if (r & s & p).is_empty() {
                 self.hash
+            } else {
+                self.hash ^ zobrist::EP_FILE[f as usize]
             }
-        } else {
-            self.hash
-        }
+        })
     }
 
     /// Pass this move to the side to move.
@@ -174,11 +182,12 @@ impl Board {
 
     /// Restore a passed move that was made by [`Self::pass_move`].
     #[inline(always)]
-    pub fn restore_null_move(&mut self, unpasser: NullMoveRestorer) {
+    #[allow(clippy::needless_pass_by_value)]
+    pub fn restore_null_move(&mut self, restorer: NullMoveRestorer) {
         self.side_to_move = !self.side_to_move();
         self.hash ^= zobrist::SIDE_TO_MOVE;
 
-        self.en_passant = unpasser.en_passant;
+        self.en_passant = restorer.en_passant;
     }
 
     #[inline(always)]
@@ -218,12 +227,12 @@ impl Board {
             Piece::Pawn => {
                 let captures = pawn::captures(color, sq);
 
-                if !ATKDEF {
+                if ATKDEF {
+                    captures
+                } else {
                     let advances = pawn::advances(color, sq, self.combined());
 
                     advances | (captures & (self.color_combined(!color) | self.ep_square(color)))
-                } else {
-                    captures
                 }
             },
             Piece::Knight => knight::moves(sq),
@@ -238,7 +247,7 @@ impl Board {
                         if (king::castle_clearance(color, sq.file(), ks_rook.file()) & self.combined()).is_empty()
                             && (king::castle_path(color, sq.file(), ks_rook.file()) & self.side_attack_def(!color)).is_empty()
                         {
-                            moves |= Bitboard::from(if !self.chess960 { Square::new(File::G, sq.rank()) } else { ks_rook })
+                            moves |= Bitboard::from(if self.chess960 { ks_rook} else { Square::new(File::G, sq.rank()) });
                         }
                     }
                 }
@@ -248,7 +257,7 @@ impl Board {
                         if (king::castle_clearance(color, sq.file(), qs_rook.file()) & self.combined()).is_empty()
                             && (king::castle_path(color, sq.file(), qs_rook.file()) & self.side_attack_def(!color)).is_empty()
                         {
-                            moves |= Bitboard::from(if !self.chess960 { Square::new(File::C, sq.rank()) } else { qs_rook })
+                            moves |= Bitboard::from(if self.chess960 { qs_rook } else { Square::new(File::C, sq.rank()) });
                         }
                     }
                 }
@@ -257,32 +266,36 @@ impl Board {
             },
         };
 
-        if !ATKDEF {
-            bb & !self.color_combined(self.side_to_move())
-        } else {
+        if ATKDEF {
             bb
+        } else {
+            bb & !self.color_combined(self.side_to_move())
         }
     }
 
     #[inline(always)]
     fn ep_square(&self, color: Color) -> Bitboard {
-        if let Some(f) = self.en_passant {
-            Square::new(f, [Rank::_3, Rank::_6][!color as usize]).into()
-        } else {
-            Bitboard::default()
-        }
+        self.en_passant.map_or_else(Bitboard::default,
+            |f| Square::new(f, [Rank::_3, Rank::_6][!color as usize]).into()
+        )
     }
 
+    /// Get if the side to move is in check.
     #[inline(always)]
+    #[must_use]
     pub fn is_check(&self) -> bool {
         self.is_side_check(self.side_to_move())
     }
 
+    /// Get if the side just moved is in check. This will indicate if the pseudo-legal move
+    /// previously moved is actually legal.
     #[inline(always)]
+    #[must_use]
     pub fn is_illegal(&self) -> bool {
         self.is_side_check(!self.side_to_move())
     }
 
+    #[must_use]
     fn is_side_check(&self, color: Color) -> bool {
         let combined = self.combined();
         let ksq = self.king_of(color);
@@ -294,15 +307,22 @@ impl Board {
             || !(rook::moves(ksq, combined) & (self.rooks_of(!color) | self.queens_of(!color))).is_empty()
     }
 
+    #[must_use]
     pub fn side_attack_def(&self, color: Color) -> Bitboard {
         let mut atkdef = Bitboard::default();
         for sq in self.color_combined(color) {
-            let piece = self.piece_on(sq).unwrap();
+            // SAFETY: we're only iterating through squares with pieces
+            let piece = unsafe { self.piece_on(sq).unwrap_unchecked() };
             atkdef |= self.piece_targets::<true>(color, piece, sq);
         }
         atkdef
     }
 
+    /// Get the attackers and defenders of a particular square while considering some squares.
+    ///
+    /// # Panics
+    /// This function panics when the `consider & !self.combined()` is non-zero.
+    #[must_use]
     pub fn attackers(&self, square: Square, consider: Bitboard) -> Bitboard {
         let mut attackers = Bitboard::default();
         for sq in consider {
@@ -333,14 +353,14 @@ impl Board {
 }
 
 #[inline(always)]
-fn mailbox_element(color: Color, piece: Piece) -> u8 {
+const fn mailbox_element(color: Color, piece: Piece) -> u8 {
     ((color as u8 + 1) << 3) | (piece as u8)
 }
 
 impl core::hash::Hash for Board {
     #[inline(always)]
-    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        self.hash.hash(state)
+    fn hash<H: core::hash::Hasher>(&self, state: &mut H) {
+        self.hash.hash(state);
     }
 }
 

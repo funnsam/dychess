@@ -19,6 +19,7 @@ impl Move {
     /// assert_eq!(mov.promotion(), None);
     /// ```
     #[inline(always)]
+    #[must_use]
     pub const fn new(from: Square, to: Square, promotion: Option<Piece>) -> Self {
         if let Some(promotion) = promotion {
             Self(((promotion as u16) << 12) | ((to.to_u8() as u16) << 6) | (from.to_u8() as u16))
@@ -28,12 +29,15 @@ impl Move {
     }
 
     #[inline(always)]
+    #[must_use]
     pub const fn from(&self) -> Square { Square::from_index(self.0 as u8 & 63) }
 
     #[inline(always)]
+    #[must_use]
     pub const fn to(&self) -> Square { Square::from_index((self.0 >> 6) as u8 & 63) }
 
     #[inline(always)]
+    #[must_use]
     pub fn promotion(&self) -> Option<Piece> {
         let promotion = unsafe { *Piece::ALL.get_unchecked(self.0 as usize >> 12) };
 

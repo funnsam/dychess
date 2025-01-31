@@ -25,7 +25,8 @@ impl Color {
 
     /// Get the back rank of this side.
     #[inline(always)]
-    pub fn back_rank(self) -> Rank {
+    #[must_use]
+    pub const fn back_rank(self) -> Rank {
         match self {
             Self::White => Rank::_1,
             Self::Black => Rank::_8,
@@ -34,7 +35,8 @@ impl Color {
 
     /// Map `self` to either `'w'` or `'b'`.
     #[inline(always)]
-    pub fn to_char(self) -> char {
+    #[must_use]
+    pub const fn to_char(self) -> char {
         match self {
             Self::White => 'w',
             Self::Black => 'b',

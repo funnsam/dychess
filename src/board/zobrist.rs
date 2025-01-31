@@ -1,4 +1,4 @@
-use super::*;
+use super::{Color, Piece, Square};
 
 #[inline(always)]
 pub(super) fn piece(piece: Piece, color: Color, square: Square) -> u64 {
