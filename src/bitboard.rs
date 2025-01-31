@@ -173,13 +173,14 @@ impl Iterator for BitboardIter {
     #[inline(always)]
     fn next(&mut self) -> Option<Self::Item> {
         (!self.had_emptied()).then(|| {
-            let tz = self.remaining.0.trailing_zeros();
-            if tz < 63 {
+            if self.remaining.0 != 0x8000_0000_0000_0000 {
+                let tz = self.remaining.0.trailing_zeros();
                 self.remaining.0 >>= tz + 1;
+                self.at += tz as usize + 1;
             } else {
                 self.remaining.0 = 0;
+                self.at += 64;
             }
-            self.at += tz as usize + 1;
             unsafe { *Square::ALL.get_unchecked(self.at - 1) }
         })
     }
