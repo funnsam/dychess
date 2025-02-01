@@ -4,9 +4,9 @@ static EPD: &str = include_str!("standard.epd");
 
 #[test]
 fn test_perft() {
-    // perft::<true>(&Board::from_fen(false, "\
-    // r6r/Pppk1ppp/1b1B1nbN/nP1p4/B1P1P3/q4N2/Pp1P1RPP/R2Q2K1 w - - 2 3\
-    // ").unwrap(), 2);
+    // perft::<true>(&Board::from_epd(false, "\
+    // r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q2/PPPBBPpP/R3K2R b Kkq - 1 2\
+    // ").unwrap(), 1);
     // panic!();
 
     for line in EPD.lines() {
@@ -34,14 +34,14 @@ fn perft<const ROOT: bool>(board: &Board, depth: usize) -> u64 {
         let this_node = perft::<false>(&this, depth - 1);
         total += this_node;
 
-        // if ROOT {
-        //     println!("  {m}: {this_node}");
-        // }
+        if ROOT {
+            println!("  {m}: {this_node}");
+        }
     }
 
-    // if ROOT {
-    //     println!("{depth}: {total} nodes\n");
-    // }
+    if ROOT {
+        println!("{depth}: {total} nodes\n");
+    }
 
     total
 }

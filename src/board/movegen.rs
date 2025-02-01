@@ -6,7 +6,7 @@ pub struct MoveGen<'a, const CAPTURES: bool> {
     priority: &'a [Move],
     priority_at: usize,
 
-    cur_piece_targets: BitboardIter,
+    cur_piece_targets: Bitboard,
     cur_piece_sq: Square,
     cur_promote_to: u8,
 
@@ -24,7 +24,7 @@ impl Board {
             priority,
             priority_at: 0,
 
-            cur_piece_targets: Bitboard::default().into_iter(),
+            cur_piece_targets: Bitboard::default(),
             cur_piece_sq: Square::default(),
             cur_promote_to: 0,
 
@@ -42,7 +42,7 @@ impl Board {
             priority,
             priority_at: 0,
 
-            cur_piece_targets: Bitboard::default().into_iter(),
+            cur_piece_targets: Bitboard::default(),
             cur_piece_sq: Square::default(),
             cur_promote_to: 0,
 
@@ -74,14 +74,14 @@ impl<const CAPTURES: bool> MoveGen<'_, CAPTURES> {
             };
         }
 
-        while self.cur_piece_targets.had_emptied() {
+        while self.cur_piece_targets.is_empty() {
             let square = self.pieces.next()?;
             let piece = self.board.piece_on(square).unwrap();
 
             let piece_targets = self.board.piece_targets::<false>(self.board.side_to_move(), piece, square)
                 & target_mask;
 
-            self.cur_piece_targets = piece_targets.into_iter();
+            self.cur_piece_targets = piece_targets;
             self.cur_piece_sq = square;
         }
 
@@ -89,19 +89,21 @@ impl<const CAPTURES: bool> MoveGen<'_, CAPTURES> {
             let piece = self.board.piece_on(self.cur_piece_sq).unwrap();
             self.cur_promote_to = (
                 piece == Piece::Pawn
-                && !(self.cur_piece_targets.remainder() & pawn::PROMOTION_SQUARES).is_empty()
+                && !(self.cur_piece_targets & pawn::PROMOTION_SQUARES).is_empty()
             ) as u8;
         }
 
         // SAFETY: `self.cur_piece_targets` is checked for 0 in a loop before
-        let to_sq = unsafe { self.cur_piece_targets.next().unwrap_unchecked() };
+        let to_sq = unsafe { self.cur_piece_targets.first_square().unwrap_unchecked() };
 
         let mov = if self.cur_promote_to == 0 {
+            self.cur_piece_targets ^= to_sq.into();
             Move::new(self.cur_piece_sq, to_sq, None)
         } else {
             // SAFETY: the index is bounded by the if-else conds following this line
             let promotion = unsafe { *Piece::ALL.get_unchecked(self.cur_promote_to as usize) };
             if promotion == Piece::Queen {
+                self.cur_piece_targets ^= to_sq.into();
                 self.cur_promote_to = 0;
             } else {
                 self.cur_promote_to += 1;
