@@ -164,6 +164,13 @@ impl BitboardIter {
     pub const fn had_emptied(&self) -> bool {
         self.0.is_empty()
     }
+
+    /// Get the squares that aren't iterated through yet.
+    #[inline(always)]
+    #[must_use]
+    pub const fn remainder(&self) -> Bitboard {
+        self.0
+    }
 }
 
 impl Iterator for BitboardIter {
