@@ -289,6 +289,17 @@ impl Board {
     }
 
     /// Get if the side to move is in check.
+    ///
+    /// # Example
+    /// ```
+    /// use dychess::prelude::*;
+    ///
+    /// let board = Board::from_epd(false, "8/4k3/8/8/8/8/3K4/8 w - -").unwrap();
+    /// assert!(!board.is_check());
+    ///
+    /// let board = Board::from_epd(false, "8/4k3/8/8/8/2p5/3K4/8 w - -").unwrap();
+    /// assert!(board.is_check());
+    /// ```
     #[inline(always)]
     #[must_use]
     pub fn is_check(&self) -> bool {
@@ -326,20 +337,17 @@ impl Board {
         atkdef
     }
 
-    /// Get the attackers and defenders of a particular square while considering some squares.
-    ///
-    /// # Panics
-    /// This function panics when the `consider & !self.combined()` is non-zero.
+    /// Get the attackers and defenders of a particular square.
     #[must_use]
-    pub fn attackers(&self, square: Square, consider: Bitboard) -> Bitboard {
-        let mut attackers = Bitboard::default();
-        for sq in consider {
-            let (piece, color) = self.piece_and_color_on(sq).unwrap();
-            if !(self.piece_targets::<true>(color, piece, sq) & square.into()).is_empty() {
-                attackers |= sq.into();
-            }
-        }
-        attackers
+    pub fn attackers(&self, sq: Square) -> Bitboard {
+        let combined = self.combined();
+
+        pawn::captures(!Color::White, sq) & self.white_pawns()
+            | pawn::captures(!Color::Black, sq) & self.black_pawns()
+            | knight::moves(sq) & self.knights()
+            | bishop::moves(sq, combined) & (self.bishops() | self.queens())
+            | rook::moves(sq, combined) & (self.rooks() | self.queens())
+            | king::moves(sq) & self.kings()
     }
 
     // #[doc(hidden)]

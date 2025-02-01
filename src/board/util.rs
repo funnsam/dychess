@@ -176,6 +176,66 @@ impl Board {
     #[must_use]
     pub fn their_king(&self) -> Square { self.king_of(!self.side_to_move()) }
 
+    /// All of white's pawns on the board.
+    #[inline(always)]
+    #[must_use]
+    pub fn white_pawns(&self) -> Bitboard { self.pawns_of(Color::White) }
+
+    /// All of white's knights on the board.
+    #[inline(always)]
+    #[must_use]
+    pub fn white_knights(&self) -> Bitboard { self.knights_of(Color::White) }
+
+    /// All of white's bishops on the board.
+    #[inline(always)]
+    #[must_use]
+    pub fn white_bishops(&self) -> Bitboard { self.bishops_of(Color::White) }
+
+    /// All of white's rooks on the board.
+    #[inline(always)]
+    #[must_use]
+    pub fn white_rooks(&self) -> Bitboard { self.rooks_of(Color::White) }
+
+    /// All of white's queens on the board.
+    #[inline(always)]
+    #[must_use]
+    pub fn white_queens(&self) -> Bitboard { self.queens_of(Color::White) }
+
+    /// White's king on the board.
+    #[inline(always)]
+    #[must_use]
+    pub fn white_king(&self) -> Square { self.king_of(Color::White) }
+
+    /// All of black's pawns on the board.
+    #[inline(always)]
+    #[must_use]
+    pub fn black_pawns(&self) -> Bitboard { self.pawns_of(Color::Black) }
+
+    /// All of black's knights on the board.
+    #[inline(always)]
+    #[must_use]
+    pub fn black_knights(&self) -> Bitboard { self.knights_of(Color::Black) }
+
+    /// All of black's bishops on the board.
+    #[inline(always)]
+    #[must_use]
+    pub fn black_bishops(&self) -> Bitboard { self.bishops_of(Color::Black) }
+
+    /// All of black's rooks on the board.
+    #[inline(always)]
+    #[must_use]
+    pub fn black_rooks(&self) -> Bitboard { self.rooks_of(Color::Black) }
+
+    /// All of black's queens on the board.
+    #[inline(always)]
+    #[must_use]
+    pub fn black_queens(&self) -> Bitboard { self.queens_of(Color::Black) }
+
+    /// Black's king on the board.
+    #[inline(always)]
+    #[must_use]
+    pub fn black_king(&self) -> Square { self.king_of(Color::Black) }
+
     /// All of the pawns on the board that belongs to the side passed in.
     #[inline(always)]
     #[must_use]
