@@ -3,8 +3,6 @@ use super::{Bitboard, BitboardIter, Board, Move, Piece, Square, pawn};
 /// A staged pseudo-legal move generator.
 pub struct MoveGen<'a, const CAPTURES: bool> {
     board: &'a Board,
-    priority: &'a [Move],
-    priority_at: usize,
 
     cur_piece_targets: Bitboard,
     cur_piece_sq: Square,
@@ -30,11 +28,9 @@ impl Board {
     /// ```
     #[inline(always)]
     #[must_use]
-    pub fn pseudo_legal_moves<'a>(&'a self, priority: &'a [Move]) -> MoveGen<'a, false> {
+    pub fn pseudo_legal_moves<'a>(&'a self) -> MoveGen<'a, false> {
         MoveGen {
             board: self,
-            priority,
-            priority_at: 0,
 
             cur_piece_targets: Bitboard::default(),
             cur_piece_sq: Square::default(),
@@ -48,11 +44,9 @@ impl Board {
     /// prioritized over other moves.
     #[inline(always)]
     #[must_use]
-    pub fn pseudo_legal_captures<'a>(&'a self, priority: &'a [Move]) -> MoveGen<'a, true> {
+    pub fn pseudo_legal_captures<'a>(&'a self) -> MoveGen<'a, true> {
         MoveGen {
             board: self,
-            priority,
-            priority_at: 0,
 
             cur_piece_targets: Bitboard::default(),
             cur_piece_sq: Square::default(),
@@ -63,28 +57,11 @@ impl Board {
     }
 }
 
-impl<const CAPTURES: bool> MoveGen<'_, CAPTURES> {
-    #[inline(always)]
-    fn try_next(&mut self) -> Option<Result<Move, ()>> {
+impl<const CAPTURES: bool> Iterator for MoveGen<'_, CAPTURES> {
+    type Item = Move;
+
+    fn next(&mut self) -> Option<Move> {
         let target_mask = if CAPTURES { self.board.combined() } else { !Bitboard::default() };
-
-        if self.priority_at < self.priority.len() {
-            let candidate = self.priority[self.priority_at];
-            self.priority_at += 1;
-
-            if self.priority[..self.priority_at - 1].contains(&candidate) { return Some(Err(())) }
-
-            return if let Some((piece, color)) = self.board.piece_and_color_on(candidate.from()) {
-                if color != self.board.side_to_move { return Some(Err(())) }
-
-                let targets = self.board.piece_targets::<false>(self.board.side_to_move(), piece, candidate.from())
-                    & target_mask;
-
-                Some((!(targets & candidate.to().into()).is_empty()).then_some(candidate).ok_or(()))
-            } else {
-                Some(Err(()))
-            };
-        }
 
         while self.cur_piece_targets.is_empty() {
             let square = self.pieces.next()?;
@@ -133,19 +110,7 @@ impl<const CAPTURES: bool> MoveGen<'_, CAPTURES> {
             }
         };
 
-        Some((!self.priority.contains(&mov)).then_some(mov).ok_or(()))
-    }
-}
-
-impl<const CAPTURES: bool> Iterator for MoveGen<'_, CAPTURES> {
-    type Item = Move;
-
-    fn next(&mut self) -> Option<Move> {
-        loop {
-            if let Ok(m) = self.try_next()? {
-                return Some(m);
-            }
-        }
+        Some(mov)
     }
 }
 
