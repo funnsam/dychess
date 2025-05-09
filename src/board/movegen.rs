@@ -100,16 +100,14 @@ impl<const CAPTURES: bool> MoveGen<'_, CAPTURES> {
             self.cur_piece_targets ^= to_sq.into();
             Move::new(self.cur_piece_sq, to_sq, None)
         } else {
-            // SAFETY: the index is bounded by the if-else conds following this line
-            let promotion = unsafe { *Piece::ALL.get_unchecked(self.cur_promote_to as usize) };
-            if promotion == Piece::Queen {
+            if self.cur_promote_to >= Piece::Queen as u8 {
                 self.cur_piece_targets ^= to_sq.into();
                 self.cur_promote_to = 0;
             } else {
                 self.cur_promote_to += 1;
             }
 
-            Move::new(self.cur_piece_sq, to_sq, Some(promotion))
+            Move::new(self.cur_piece_sq, to_sq, Piece::try_from(self.cur_promote_to).ok())
         };
 
         Some((!self.priority.contains(&mov)).then_some(mov).ok_or(()))

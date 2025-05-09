@@ -55,3 +55,13 @@ impl fmt::Display for Piece {
         write!(f, "{}", self.to_lowercase_char())
     }
 }
+
+impl TryFrom<u8> for Piece {
+    type Error = ();
+
+    fn try_from(value: u8) -> Result<Self, Self::Error> {
+        (value <= Self::King as u8)
+            .then(|| unsafe { core::mem::transmute(value) })
+            .ok_or(())
+    }
+}
