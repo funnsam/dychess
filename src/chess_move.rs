@@ -1,9 +1,9 @@
-use core::fmt;
+use core::{fmt, num::NonZeroU16};
 
 use crate::{piece::Piece, square::Square};
 
-#[derive(Default, Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct Move(u16);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct Move(NonZeroU16);
 
 impl Move {
     /// Create a new move.
@@ -11,6 +11,9 @@ impl Move {
     /// # Promotion
     /// The promotion will be removed if it's a pawn due to internal representation. Note that this
     /// might change to other behavior on future versions.
+    ///
+    /// # Panics
+    /// Panics if `from` and `to` are the `A1` square, and promotion is `None` or `Some(Piece::Pawn)`.
     ///
     /// ```
     /// use dychess::prelude::*;
@@ -21,25 +24,30 @@ impl Move {
     #[inline(always)]
     #[must_use]
     pub const fn new(from: Square, to: Square, promotion: Option<Piece>) -> Self {
-        if let Some(promotion) = promotion {
-            Self(((promotion as u16) << 12) | ((to.to_u8() as u16) << 6) | (from.to_u8() as u16))
-        } else {
-            Self(((to.to_u8() as u16) << 6) | (from.to_u8() as u16))
-        }
+        let promotion = if let Some(p) = promotion { p } else { Piece::Pawn };
+
+        let val = ((promotion as u16) << 12)
+            | ((to.to_u8() as u16) << 6)
+            | (from.to_u8() as u16);
+        Self(NonZeroU16::new(val).expect("null-valued move pass into `Move::new`"))
     }
 
     #[inline(always)]
     #[must_use]
-    pub const fn from(&self) -> Square { Square::from_index(self.0 as u8 & 63) }
+    pub const fn from(&self) -> Square {
+        Square::from_index(self.0.get() as u8 & 63)
+    }
 
     #[inline(always)]
     #[must_use]
-    pub const fn to(&self) -> Square { Square::from_index((self.0 >> 6) as u8 & 63) }
+    pub const fn to(&self) -> Square {
+        Square::from_index((self.0.get() >> 6) as u8 & 63)
+    }
 
     #[inline(always)]
     #[must_use]
     pub fn promotion(&self) -> Option<Piece> {
-        let promotion = unsafe { *Piece::ALL.get_unchecked(self.0 as usize >> 12) };
+        let promotion = unsafe { *Piece::ALL.get_unchecked(self.0.get() as usize >> 12) };
 
         (promotion != Piece::Pawn).then_some(promotion)
     }
