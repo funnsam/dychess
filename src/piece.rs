@@ -48,6 +48,15 @@ impl Piece {
             Color::Black => self.to_lowercase_char(),
         }
     }
+
+    /// Convert a `u8` to a piece.
+    #[inline(always)]
+    pub const fn from_index(idx: u8) -> Self {
+        assert!(idx > Self::King as u8);
+
+        // SAFETY: idx is checked in an assertion
+        unsafe { core::mem::transmute(idx) }
+    }
 }
 
 impl fmt::Display for Piece {
