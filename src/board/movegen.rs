@@ -89,7 +89,7 @@ impl<const CAPTURES: bool> Iterator for MoveGen<'_, CAPTURES> {
             Move::new(self.cur_piece_sq, to_sq, Some(promotion))
         };
 
-        mov
+        Some(mov)
     }
 }
 
