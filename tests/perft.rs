@@ -27,7 +27,7 @@ fn perft<const ROOT: bool>(board: &Board, depth: usize) -> u64 {
     if depth == 0 { return 1 };
 
     let mut total = 0;
-    for m in board.pseudo_legal_moves(&[]) {
+    for m in board.pseudo_legal_moves() {
         let this = board.copy_make_move(m);
         if this.is_illegal() { continue };
 
