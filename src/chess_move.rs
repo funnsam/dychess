@@ -35,10 +35,54 @@ impl Move {
     pub const fn new(from: Square, to: Square, promotion: Option<Piece>) -> Self {
         let promotion = if let Some(p) = promotion { p } else { Piece::Pawn };
 
+        if matches!((from, to, promotion), (Square::A1, Square::A1, Piece::Pawn)) {
+            panic!("null-valued move passed into `Move::new`");
+        }
+
+        unsafe {
+            Self::encode(from, to, promotion)
+        }
+    }
+
+    /// Create a new move, without checking for null-valued moves.
+    ///
+    /// # Safety
+    /// See [`Self::new`] Panics section.
+    #[inline(always)]
+    #[must_use]
+    pub const unsafe fn new_unchecked(from: Square, to: Square, promotion: Option<Piece>) -> Self {
+        let promotion = if let Some(p) = promotion { p } else { Piece::Pawn };
+
+        unsafe {
+            Self::encode(from, to, promotion)
+        }
+    }
+
+    /// Construct a new move directly from a [`NonZeroU16`].
+    ///
+    /// # Layout
+    /// - Bits `12..=15` are the piece to promote to (0 means `None`).
+    /// - Bits `6..=11` are the destination square.
+    /// - Bits `0..=5` are the source square.
+    ///
+    /// # Safety
+    /// The promotion field must be in the range of `0..6`.
+    #[inline(always)]
+    #[must_use]
+    pub const unsafe fn from_value(val: NonZeroU16) -> Self {
+        Self(val)
+    }
+
+    #[inline(always)]
+    #[must_use]
+    const unsafe fn encode(from: Square, to: Square, promotion: Piece) -> Self {
         let val = ((promotion as u16) << 12)
             | ((to.to_u8() as u16) << 6)
             | (from.to_u8() as u16);
-        Self(NonZeroU16::new(val).expect("null-valued move passed into `Move::new`"))
+
+        unsafe {
+            Self(NonZeroU16::new_unchecked(val))
+        }
     }
 
     #[inline(always)]
@@ -55,10 +99,15 @@ impl Move {
 
     #[inline(always)]
     #[must_use]
-    pub fn promotion(&self) -> Option<Piece> {
-        let promotion = unsafe { *Piece::ALL.get_unchecked(self.0.get() as usize >> 12) };
+    pub const fn promotion(&self) -> Option<Piece> {
+        let idx = self.0.get() >> 12;
 
-        (promotion != Piece::Pawn).then_some(promotion)
+        if idx != 0 {
+            // SAFETY: valid `Move`s has valid promotion field
+            Some(unsafe { core::mem::transmute(idx as u8) })
+        } else {
+            None
+        }
     }
 }
 
@@ -73,5 +122,17 @@ impl fmt::Display for Move {
             Some(Piece::King) => "k",
             None => "",
         })
+    }
+}
+
+impl From<Move> for NonZeroU16 {
+    fn from(value: Move) -> Self {
+        value.0
+    }
+}
+
+impl From<Move> for u16 {
+    fn from(value: Move) -> Self {
+        value.0.get()
     }
 }
