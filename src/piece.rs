@@ -48,10 +48,35 @@ impl Piece {
             Color::Black => self.to_lowercase_char(),
         }
     }
+
+    /// Convert an index to a piece.
+    ///
+    /// # Safety
+    /// The index must be valid.
+    #[inline(always)]
+    #[must_use]
+    pub unsafe fn from_index_unchecked(idx: u8) -> Self {
+        // SAFETY: up to caller
+        unsafe {
+            core::mem::transmute(idx)
+        }
+    }
 }
 
 impl fmt::Display for Piece {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.to_lowercase_char())
+    }
+}
+
+impl TryFrom<u8> for Piece {
+    type Error = ();
+
+    #[inline(always)]
+    fn try_from(value: u8) -> Result<Self, Self::Error> {
+        // SAFETY: checked before
+        (value <= Piece::King as _).then(|| unsafe {
+            Self::from_index_unchecked(value)
+        }).ok_or(())
     }
 }

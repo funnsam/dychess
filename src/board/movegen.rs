@@ -118,7 +118,7 @@ impl<const CAPTURES: bool> MoveGen<'_, CAPTURES> {
             }
         } else {
             // SAFETY: the index is bounded by the if-else conds following this line
-            let promotion = unsafe { *Piece::ALL.get_unchecked(self.cur_promote_to as usize) };
+            let promotion = unsafe { Piece::from_index_unchecked(self.cur_promote_to) };
             if promotion == Piece::Queen {
                 self.cur_piece_targets ^= to_sq.into();
                 self.cur_promote_to = 0;

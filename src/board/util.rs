@@ -29,10 +29,11 @@ impl Board {
     #[must_use]
     pub fn piece_and_color_on(&self, square: Square) -> Option<(Piece, Color)> {
         let element = unsafe { *self.mailbox.get_unchecked(square.to_usize()) };
+
         (element != 0).then(|| unsafe {
             (
-                *Piece::ALL.get_unchecked(element as usize & 7),
-                *Color::ALL.get_unchecked((element as usize >> 3) - 1),
+                Piece::from_index_unchecked(element & 7),
+                Color::from_index_unchecked((element >> 3) - 1),
             )
         })
     }
