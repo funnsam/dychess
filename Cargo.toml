@@ -33,3 +33,7 @@ debug = true
 [[bench]]
 name = "perft"
 harness = false
+
+[[bench]]
+name = "make_move"
+harness = false
