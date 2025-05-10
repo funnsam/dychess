@@ -2,6 +2,7 @@ use core::{fmt, num::NonZeroU16};
 
 use crate::{piece::Piece, square::Square};
 
+#[repr(transparent)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Move(NonZeroU16);
 
