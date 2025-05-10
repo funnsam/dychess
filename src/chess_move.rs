@@ -114,13 +114,12 @@ impl Move {
 impl fmt::Display for Move {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}{}{}", self.from(), self.to(), match self.promotion() {
-            Some(Piece::Pawn) => "p",
+            None | Some(Piece::Pawn) => "",
             Some(Piece::Knight) => "n",
             Some(Piece::Bishop) => "b",
             Some(Piece::Rook) => "r",
             Some(Piece::Queen) => "q",
             Some(Piece::King) => "k",
-            None => "",
         })
     }
 }

@@ -16,6 +16,18 @@ pub struct MoveGen<'a, const CAPTURES: bool> {
 impl Board {
     /// Generate pseudo-legal moves that can be iterated with a list of moves that are prioritized
     /// over other moves.
+    ///
+    /// # Example
+    /// ```
+    /// # use dychess::prelude::*;
+    /// #
+    /// let board = Board::default();
+    ///
+    /// assert_eq!(
+    ///     board.pseudo_legal_moves(&[]).count(),
+    ///     20,
+    /// );
+    /// ```
     #[inline(always)]
     #[must_use]
     pub fn pseudo_legal_moves<'a>(&'a self, priority: &'a [Move]) -> MoveGen<'a, false> {
@@ -98,7 +110,12 @@ impl<const CAPTURES: bool> MoveGen<'_, CAPTURES> {
 
         let mov = if self.cur_promote_to == 0 {
             self.cur_piece_targets ^= to_sq.into();
-            Move::new(self.cur_piece_sq, to_sq, None)
+
+            // SAFETY: `from == to` is not possible since we mask away friendly pieces, so `from
+            // == to == A1` is impossible
+            unsafe {
+                Move::new_unchecked(self.cur_piece_sq, to_sq, None)
+            }
         } else {
             // SAFETY: the index is bounded by the if-else conds following this line
             let promotion = unsafe { *Piece::ALL.get_unchecked(self.cur_promote_to as usize) };
@@ -109,7 +126,11 @@ impl<const CAPTURES: bool> MoveGen<'_, CAPTURES> {
                 self.cur_promote_to += 1;
             }
 
-            Move::new(self.cur_piece_sq, to_sq, Some(promotion))
+            // SAFETY: `from == to` is not possible since we mask away friendly pieces, so `from
+            // == to == A1` is impossible
+            unsafe {
+                Move::new_unchecked(self.cur_piece_sq, to_sq, Some(promotion))
+            }
         };
 
         Some((!self.priority.contains(&mov)).then_some(mov).ok_or(()))
