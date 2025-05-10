@@ -8,18 +8,32 @@ pub struct Move(NonZeroU16);
 impl Move {
     /// Create a new move.
     ///
+    /// ```
+    /// use dychess::prelude::*;
+    ///
+    /// let mov = Move::new(Square::E2, Square::E4, Some(Piece::Pawn));
+    /// assert_eq!(mov.promotion(), None);
+    /// ```
+    ///
     /// # Promotion
     /// The promotion will be removed if it's a pawn due to internal representation. Note that this
     /// might change to other behavior on future versions.
     ///
     /// # Panics
-    /// Panics if `from` and `to` are the `A1` square, and promotion is `None` or `Some(Piece::Pawn)`.
+    /// Panics if `from` and `to` are the `A1` square, and promotion is `None` or
+    /// `Some(Piece::Pawn)`. This is due to this type uses [`NonZeroU16`] internally, so that
+    /// `Option<Move>` is efficient.
+    ///
+    /// ```should_panic
+    /// # use dychess::prelude::*;
+    /// #
+    /// Move::new(Square::A1, Square::A1, Some(Piece::Pawn));
+    /// ```
     ///
     /// ```
-    /// use dychess::prelude::*;
-    ///
-    /// let mov = Move::new(Square::A1, Square::A1, Some(Piece::Pawn));
-    /// assert_eq!(mov.promotion(), None);
+    /// # use dychess::prelude::*;
+    /// #
+    /// assert_eq!(size_of::<Option<Move>>(), size_of::<Move>());
     /// ```
     #[inline(always)]
     #[must_use]
@@ -29,7 +43,7 @@ impl Move {
         let val = ((promotion as u16) << 12)
             | ((to.to_u8() as u16) << 6)
             | (from.to_u8() as u16);
-        Self(NonZeroU16::new(val).expect("null-valued move pass into `Move::new`"))
+        Self(NonZeroU16::new(val).expect("null-valued move passed into `Move::new`"))
     }
 
     #[inline(always)]

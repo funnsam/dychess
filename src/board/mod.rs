@@ -292,8 +292,8 @@ impl Board {
     ///
     /// # Example
     /// ```
-    /// use dychess::prelude::*;
-    ///
+    /// # use dychess::prelude::*;
+    /// #
     /// let board = Board::from_epd(false, "8/4k3/8/8/8/8/3K4/8 w - -").unwrap();
     /// assert!(!board.is_check());
     ///

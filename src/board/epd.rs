@@ -37,8 +37,8 @@ impl Board {
     ///
     /// # Example
     /// ```
-    /// use dychess::prelude::*;
-    ///
+    /// # use dychess::prelude::*;
+    /// #
     /// let initial = Board::from_epd(
     ///     false,
     ///     "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
@@ -145,8 +145,8 @@ impl Board {
 ///
 /// # Example
 /// ```
-/// use dychess::prelude::*;
-///
+/// # use dychess::prelude::*;
+/// #
 /// let initial = Board::default();
 /// assert_eq!(initial.to_string(), "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -");
 /// ```
