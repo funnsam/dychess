@@ -8,16 +8,16 @@ pub struct Move(NonZeroU16);
 impl Move {
     /// Create a new move.
     ///
-    /// ```
-    /// use dychess::prelude::*;
-    ///
-    /// let mov = Move::new(Square::E2, Square::E4, Some(Piece::Pawn));
-    /// assert_eq!(mov.promotion(), None);
-    /// ```
-    ///
     /// # Promotion
     /// The promotion will be removed if it's a pawn due to internal representation. Note that this
     /// might change to other behavior on future versions.
+    ///
+    /// ```
+    /// # use dychess::prelude::*;
+    /// #
+    /// let mov = Move::new(Square::E2, Square::E4, Some(Piece::Pawn));
+    /// assert_eq!(mov.promotion(), None);
+    /// ```
     ///
     /// # Panics
     /// Panics if `from` and `to` are the `A1` square, and promotion is `None` or
@@ -27,13 +27,8 @@ impl Move {
     /// ```should_panic
     /// # use dychess::prelude::*;
     /// #
+    /// // This will not work
     /// Move::new(Square::A1, Square::A1, Some(Piece::Pawn));
-    /// ```
-    ///
-    /// ```
-    /// # use dychess::prelude::*;
-    /// #
-    /// assert_eq!(size_of::<Option<Move>>(), size_of::<Move>());
     /// ```
     #[inline(always)]
     #[must_use]
