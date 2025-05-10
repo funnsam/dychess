@@ -15,25 +15,18 @@ fn criterion_benchmark(c: &mut Criterion) {
 }
 
 fn perft<const ROOT: bool>(board: &Board, depth: usize) -> u64 {
-    // board._check_legality();
     if depth == 0 { return 1 };
 
     let mut total = 0;
     for m in board.pseudo_legal_moves(&[]) {
-        let this = board.copy_make_move(m);
+        let mut this = board.clone();
+        this.make_move(m);
+
         if this.is_illegal() { continue };
 
         let this_node = perft::<false>(&this, depth - 1);
         total += this_node;
-
-        // if ROOT {
-        //     println!("  {m}: {this_node}");
-        // }
     }
-
-    // if ROOT {
-    //     println!("{depth}: {total} nodes\n");
-    // }
 
     total
 }

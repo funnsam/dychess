@@ -35,18 +35,6 @@ impl Default for Board {
 }
 
 impl Board {
-    /// Make a move on a new cloned board.
-    ///
-    /// # Panics
-    /// This function panics if the move's `from` square is empty.
-    #[inline(always)]
-    #[must_use]
-    pub fn copy_make_move(&self, mov: Move) -> Self {
-        let mut after = self.clone();
-        after.make_move(mov);
-        after
-    }
-
     /// Make a move on the board.
     ///
     /// # Panics
