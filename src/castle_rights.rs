@@ -21,14 +21,14 @@ impl CastleRights {
 
     #[allow(unused)]
     #[inline(always)]
-    pub(crate) fn set_ks_file(&mut self, f: File) {
+    pub(crate) const fn set_ks_file(&mut self, f: File) {
         self.0 &= !0b11100000;
         self.0 |= (f as u8) << 5;
     }
 
     #[allow(unused)]
     #[inline(always)]
-    pub(crate) fn set_qs_file(&mut self, f: File) {
+    pub(crate) const fn set_qs_file(&mut self, f: File) {
         self.0 &= !0b00011100;
         self.0 |= (f as u8) << 2;
     }
@@ -70,31 +70,31 @@ impl CastleRights {
 
     /// Disallow castling to the king-side rook.
     #[inline(always)]
-    pub fn disallow_king_side(&mut self) {
+    pub const fn disallow_king_side(&mut self) {
         self.0 &= !2;
     }
 
     /// Disallow castling to the queen-side rook.
     #[inline(always)]
-    pub fn disallow_queen_side(&mut self) {
+    pub const fn disallow_queen_side(&mut self) {
         self.0 &= !1;
     }
 
     /// Disallow castling to any rook.
     #[inline(always)]
-    pub fn disallow_castling(&mut self) {
+    pub const fn disallow_castling(&mut self) {
         self.0 = 0;
     }
 
     /// Allow castling to the king-side rook.
     #[inline(always)]
-    pub fn allow_king_side(&mut self) {
+    pub const fn allow_king_side(&mut self) {
         self.0 |= 2;
     }
 
     /// Allow castling to the queen-side rook.
     #[inline(always)]
-    pub fn allow_queen_side(&mut self) {
+    pub const fn allow_queen_side(&mut self) {
         self.0 |= 1;
     }
 }

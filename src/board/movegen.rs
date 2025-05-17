@@ -72,10 +72,10 @@ impl<const CAPTURES: bool> MoveGen<'_, CAPTURES> {
             let candidate = self.priority[self.priority_at];
             self.priority_at += 1;
 
-            if self.priority[..self.priority_at - 1].contains(&candidate) { return Some(Err(())) };
+            if self.priority[..self.priority_at - 1].contains(&candidate) { return Some(Err(())) }
 
             return if let Some((piece, color)) = self.board.piece_and_color_on(candidate.from()) {
-                if color != self.board.side_to_move { return Some(Err(())) };
+                if color != self.board.side_to_move { return Some(Err(())) }
 
                 let targets = self.board.piece_targets::<false>(self.board.side_to_move(), piece, candidate.from())
                     & target_mask;
