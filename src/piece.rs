@@ -55,10 +55,10 @@ impl Piece {
     /// The index must be valid.
     #[inline(always)]
     #[must_use]
-    pub unsafe fn from_index_unchecked(idx: u8) -> Self {
+    pub const unsafe fn from_index_unchecked(idx: u8) -> Self {
         // SAFETY: up to caller
         unsafe {
-            core::mem::transmute(idx)
+            core::mem::transmute::<u8, Self>(idx)
         }
     }
 }
@@ -75,7 +75,7 @@ impl TryFrom<u8> for Piece {
     #[inline(always)]
     fn try_from(value: u8) -> Result<Self, Self::Error> {
         // SAFETY: checked before
-        (value <= Piece::King as _).then(|| unsafe {
+        (value <= Self::King as _).then(|| unsafe {
             Self::from_index_unchecked(value)
         }).ok_or(())
     }

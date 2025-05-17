@@ -105,7 +105,7 @@ impl Move {
 
         if idx != 0 {
             // SAFETY: valid `Move`s has valid promotion field
-            Some(unsafe { core::mem::transmute(idx as u8) })
+            Some(unsafe { Piece::from_index_unchecked(idx as u8) })
         } else {
             None
         }

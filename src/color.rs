@@ -52,7 +52,7 @@ impl Color {
     pub unsafe fn from_index_unchecked(idx: u8) -> Self {
         // SAFETY: up to caller
         unsafe {
-            core::mem::transmute(idx)
+            core::mem::transmute::<u8, Self>(idx)
         }
     }
 }
@@ -69,7 +69,7 @@ impl TryFrom<u8> for Color {
     #[inline(always)]
     fn try_from(value: u8) -> Result<Self, Self::Error> {
         // SAFETY: checked before
-        (value <= Color::Black as _).then(|| unsafe {
+        (value <= Self::Black as _).then(|| unsafe {
             Self::from_index_unchecked(value)
         }).ok_or(())
     }
