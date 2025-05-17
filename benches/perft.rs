@@ -19,7 +19,7 @@ fn perft<const ROOT: bool>(board: &Board, depth: usize) -> u64 {
 
     let mut total = 0;
     for m in board.pseudo_legal_moves(&[]) {
-        let mut this = board.clone();
+        let mut this = *board;
         this.make_move(m);
 
         if this.is_illegal() { continue };
