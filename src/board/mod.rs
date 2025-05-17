@@ -6,7 +6,7 @@ mod util;
 mod zobrist;
 
 /// A chess board.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Board {
     pieces: [Bitboard; 6],
     colors: [Bitboard; 2],
