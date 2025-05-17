@@ -157,7 +157,7 @@ impl fmt::Display for Board {
 
             for file in File::ALL {
                 if let Some((piece, color)) = self.piece_and_color_on(Square::new(file, rank)) {
-                    if empty != 0 { write!(f, "{empty}")? };
+                    if empty != 0 { write!(f, "{empty}")? }
                     write!(f, "{}", piece.to_char(color))?;
                     empty = 0;
                 } else {
@@ -165,18 +165,18 @@ impl fmt::Display for Board {
                 }
             }
 
-            if empty != 0 { write!(f, "{empty}")? };
-            if rank != Rank::_1 { write!(f, "/")? };
+            if empty != 0 { write!(f, "{empty}")? }
+            if rank != Rank::_1 { write!(f, "/")? }
         }
 
         write!(f, " {} ", self.side_to_move())?;
 
         let mut i = 0;
-        if self.castle_rights[0].king_side()  { i += 1; write!(f, "K")? };
-        if self.castle_rights[0].queen_side() { i += 1; write!(f, "Q")? };
-        if self.castle_rights[1].king_side()  { i += 1; write!(f, "k")? };
-        if self.castle_rights[1].queen_side() { i += 1; write!(f, "q")? };
-        if i == 0 { write!(f, "-")? };
+        if self.castle_rights[0].king_side()  { i += 1; write!(f, "K")? }
+        if self.castle_rights[0].queen_side() { i += 1; write!(f, "Q")? }
+        if self.castle_rights[1].king_side()  { i += 1; write!(f, "k")? }
+        if self.castle_rights[1].queen_side() { i += 1; write!(f, "q")? }
+        if i == 0 { write!(f, "-")? }
 
         if let Some(file) = self.en_passant {
             write!(f, " {file}{}", pawn::ep_target_rank(self.side_to_move()))

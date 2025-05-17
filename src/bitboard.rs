@@ -36,7 +36,7 @@ impl TryFrom<Bitboard> for Square {
     #[inline(always)]
     fn try_from(bb: Bitboard) -> Result<Self, Self::Error> {
         let popcnt = bb.popcnt();
-        if popcnt != 1 { return Err(popcnt) };
+        if popcnt != 1 { return Err(popcnt) }
 
         Ok(bb.first_square().unwrap())
     }
@@ -54,7 +54,7 @@ impl Bitboard {
     #[inline(always)]
     #[must_use]
     pub const fn first_square(self) -> Option<Square> {
-        if self.is_empty() { return None };
+        if self.is_empty() { return None }
 
         Some(Square::from_index(self.0.trailing_zeros() as _))
     }
@@ -63,7 +63,7 @@ impl Bitboard {
     #[inline(always)]
     #[must_use]
     pub const fn last_square(self) -> Option<Square> {
-        if self.is_empty() { return None };
+        if self.is_empty() { return None }
 
         Some(Square::from_index(63 - self.0.leading_zeros() as u8))
     }

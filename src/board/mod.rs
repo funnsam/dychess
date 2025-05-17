@@ -109,28 +109,28 @@ impl Board {
         self.hash ^= zobrist::SIDE_TO_MOVE;
     }
 
-    pub(crate) fn allow_queen_side_castle(&mut self, color: Color) {
+    pub(crate) const fn allow_queen_side_castle(&mut self, color: Color) {
         if !self.castle_rights[color as usize].queen_side() {
             self.hash ^= zobrist::CASTLE[color as usize * 2 + 1];
         }
         self.castle_rights[color as usize].allow_queen_side();
     }
 
-    pub(crate) fn allow_king_side_castle(&mut self, color: Color) {
+    pub(crate) const fn allow_king_side_castle(&mut self, color: Color) {
         if !self.castle_rights[color as usize].king_side() {
             self.hash ^= zobrist::CASTLE[color as usize * 2];
         }
         self.castle_rights[color as usize].allow_king_side();
     }
 
-    pub(crate) fn disallow_queen_side_castle(&mut self, color: Color) {
+    pub(crate) const fn disallow_queen_side_castle(&mut self, color: Color) {
         if self.castle_rights[color as usize].queen_side() {
             self.hash ^= zobrist::CASTLE[color as usize * 2 + 1];
         }
         self.castle_rights[color as usize].disallow_queen_side();
     }
 
-    pub(crate) fn disallow_king_side_castle(&mut self, color: Color) {
+    pub(crate) const fn disallow_king_side_castle(&mut self, color: Color) {
         if self.castle_rights[color as usize].king_side() {
             self.hash ^= zobrist::CASTLE[color as usize * 2];
         }
@@ -147,8 +147,8 @@ impl Board {
             let p = self.pawns_of(self.side_to_move());
             let mut s = Bitboard::default();
 
-            if let Some(p) = f.left(1) { s |= Bitboard::from(p) };
-            if let Some(p) = f.right(1) { s |= Bitboard::from(p) };
+            if let Some(p) = f.left(1) { s |= Bitboard::from(p) }
+            if let Some(p) = f.right(1) { s |= Bitboard::from(p) }
 
             if (r & s & p).is_empty() {
                 self.hash

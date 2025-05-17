@@ -131,6 +131,7 @@ fn gen_blocker_tb<F: Fn(Bitboard, Square) -> Bitboard>(mask: Bitboard, sq: Squar
 
 fn find_magic(mask: Bitboard, table: Table) -> (Vec<Bitboard>, Magic) {
     let bits = mask.popcnt() as u8;
+    let mut used = vec![Bitboard::default(); 1 << bits];
 
     'find_magic: loop {
         let trial_mul = random_u64_few_bits();
@@ -144,8 +145,8 @@ fn find_magic(mask: Bitboard, table: Table) -> (Vec<Bitboard>, Magic) {
             continue;
         }
 
-        let mut used = vec![Bitboard::default(); 1 << bits];
         let mut max_idx = 0;
+        used.iter_mut().for_each(|i| i.0 = 0);
 
         for (blockers, movable) in &table {
             let idx = to_index(*blockers, &trial_magic);
