@@ -3,6 +3,7 @@ use core::fmt;
 use crate::square::Rank;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[repr(u8)]
 pub enum Color {
     White, Black
 }
