@@ -82,8 +82,8 @@ impl From<bool> for Color {
     /// ```
     /// # use dychess::prelude::*;
     /// #
-    /// assert_eq!(Color::from_bool(false), Color::White);
-    /// assert_eq!(Color::from_bool(true), Color::Black);
+    /// assert_eq!(Color::from(false), Color::White);
+    /// assert_eq!(Color::from(true), Color::Black);
     /// ```
     #[inline(always)]
     fn from(value: bool) -> Self {
