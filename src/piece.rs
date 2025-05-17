@@ -3,6 +3,7 @@ use core::fmt;
 use crate::color::Color;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[repr(u8)]
 pub enum Piece {
     Pawn, Knight, Bishop, Rook, Queen, King
 }
