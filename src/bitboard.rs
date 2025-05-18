@@ -154,7 +154,8 @@ impl IntoIterator for Bitboard {
     }
 }
 
-#[derive(Debug, Clone, Hash)]
+/// An iterator over the active squares in a [`Bitboard`].
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct BitboardIter(Bitboard);
 
 impl BitboardIter {
