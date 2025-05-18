@@ -1,6 +1,7 @@
 use super::{Bitboard, BitboardIter, Board, Move, Piece, Square, pawn};
 
 /// A staged pseudo-legal move generator.
+#[derive(Clone, Copy)]
 pub struct MoveGen<'a, const CAPTURES: bool> {
     board: &'a Board,
     priority: &'a [Move],
