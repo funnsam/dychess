@@ -35,7 +35,7 @@ pub mod king;
 
 pub mod prelude {
     pub use crate::bitboard::*;
-    pub use crate::board::*;
+    pub use crate::board::{*, movegen::Chunk};
     pub use crate::castle_rights::*;
     pub use crate::chess_move::*;
     pub use crate::color::*;

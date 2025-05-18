@@ -27,11 +27,14 @@ fn perft<const ROOT: bool>(board: &Board, depth: usize) -> u64 {
     // board._check_legality();
     if depth == 0 { return 1 };
 
+    let mut iter = board.pseudo_legal_moves();
+
+    let mut chunk = Chunk::new_const();
     let mut total = 0;
-    for chunk in board.pseudo_legal_moves() {
-        for m in chunk {
+    while iter.next_chunk(&mut chunk) {
+        for m in &chunk {
             let mut this = *board;
-            this.make_move(m);
+            this.make_move(*m);
 
             if this.is_illegal() { continue };
 
