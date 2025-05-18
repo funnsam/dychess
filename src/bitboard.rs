@@ -75,6 +75,13 @@ impl Bitboard {
         self.0.count_ones()
     }
 
+    /// Get if the square is active in this bitboard.
+    #[inline(always)]
+    #[must_use]
+    pub const fn square_active(self, sq: Square) -> bool {
+        self.0 & (1 << sq.to_u8()) != 0
+    }
+
     /// The 4 edges of the board combined.
     pub const EDGE: Self = crate::bb_data::EDGE;
 }

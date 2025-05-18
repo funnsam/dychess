@@ -10,6 +10,7 @@ categories = ["no-std::no-alloc"]
 build = "src/build.rs"
 
 [dependencies]
+arrayvec = { version = "0.7.6", default-features = false }
 
 [build-dependencies]
 fastrand = "2.3.0"
@@ -32,8 +33,4 @@ debug = true
 
 [[bench]]
 name = "perft"
-harness = false
-
-[[bench]]
-name = "make_move"
 harness = false

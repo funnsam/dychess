@@ -1,14 +1,11 @@
-use super::{Bitboard, BitboardIter, Board, Move, Piece, Square, pawn};
+use arrayvec::ArrayVec;
+
+use super::{Bitboard, BitboardIter, Board, Move, Piece, pawn};
 
 /// A staged pseudo-legal move generator.
 #[derive(Clone, Copy)]
 pub struct MoveGen<'a, const CAPTURES: bool> {
     board: &'a Board,
-
-    cur_piece_targets: Bitboard,
-    cur_piece_sq: Square,
-    cur_promote_to: u8,
-
     pieces: BitboardIter,
 }
 
@@ -23,7 +20,7 @@ impl Board {
     /// let board = Board::default();
     ///
     /// assert_eq!(
-    ///     board.pseudo_legal_moves(&[]).count(),
+    ///     board.pseudo_legal_moves().flatten().count(),
     ///     20,
     /// );
     /// ```
@@ -32,11 +29,6 @@ impl Board {
     pub fn pseudo_legal_moves<'a>(&'a self) -> MoveGen<'a, false> {
         MoveGen {
             board: self,
-
-            cur_piece_targets: Bitboard::default(),
-            cur_piece_sq: Square::default(),
-            cur_promote_to: 0,
-
             pieces: self.our_pieces().into_iter(),
         }
     }
@@ -48,70 +40,44 @@ impl Board {
     pub fn pseudo_legal_captures<'a>(&'a self) -> MoveGen<'a, true> {
         MoveGen {
             board: self,
-
-            cur_piece_targets: Bitboard::default(),
-            cur_piece_sq: Square::default(),
-            cur_promote_to: 0,
-
             pieces: self.our_pieces().into_iter(),
         }
     }
 }
 
 impl<const CAPTURES: bool> Iterator for MoveGen<'_, CAPTURES> {
-    type Item = Move;
+    type Item = ArrayVec<Move, 27>;
 
-    fn next(&mut self) -> Option<Move> {
+    fn next(&mut self) -> Option<ArrayVec<Move, 27>> {
         let target_mask = if CAPTURES { self.board.combined() } else { !Bitboard::default() };
 
-        while self.cur_piece_targets.is_empty() {
-            let square = self.pieces.next()?;
-            let piece = self.board.piece_on(square).unwrap();
+        let square = self.pieces.next()?;
+        let piece = self.board.piece_on(square).unwrap();
 
-            let piece_targets = self.board.piece_targets::<false>(self.board.side_to_move(), piece, square)
-                & target_mask;
+        let piece_targets = self.board.piece_targets::<false>(self.board.side_to_move(), piece, square)
+            & target_mask;
 
-            self.cur_piece_targets = piece_targets;
-            self.cur_piece_sq = square;
-        }
+        let mut moves = ArrayVec::new_const();
 
-        if self.cur_promote_to == 0 {
-            let piece = self.board.piece_on(self.cur_piece_sq).unwrap();
-            self.cur_promote_to = (
-                piece == Piece::Pawn
-                && !(self.cur_piece_targets & pawn::PROMOTION_SQUARES).is_empty()
-            ) as u8;
-        }
+        for to in piece_targets {
+            let promotes = piece == Piece::Pawn && pawn::PROMOTION_SQUARES.square_active(to);
 
-        // SAFETY: `self.cur_piece_targets` is checked for 0 in a loop before
-        let to_sq = unsafe { self.cur_piece_targets.first_square().unwrap_unchecked() };
-
-        let mov = if self.cur_promote_to == 0 {
-            self.cur_piece_targets ^= to_sq.into();
-
-            // SAFETY: `from == to` is not possible since we mask away friendly pieces, so `from
-            // == to == A1` is impossible
-            unsafe {
-                Move::new_unchecked(self.cur_piece_sq, to_sq, None)
-            }
-        } else {
-            // SAFETY: the index is bounded by the if-else conds following this line
-            let promotion = unsafe { Piece::from_index_unchecked(self.cur_promote_to) };
-            if promotion == Piece::Queen {
-                self.cur_piece_targets ^= to_sq.into();
-                self.cur_promote_to = 0;
+            if promotes {
+                for promote in Piece::PROMOTE_TO {
+                    // SAFETY: piece targets doesnt contain from == to
+                    unsafe {
+                        moves.push(Move::new_unchecked(square, to, Some(promote)));
+                    }
+                }
             } else {
-                self.cur_promote_to += 1;
+                // SAFETY: piece targets doesnt contain from == to
+                unsafe {
+                    moves.push(Move::new_unchecked(square, to, None));
+                }
             }
+        }
 
-            // SAFETY: `from == to` is not possible since we mask away friendly pieces, so `from
-            // == to == A1` is impossible
-            unsafe {
-                Move::new_unchecked(self.cur_piece_sq, to_sq, Some(promotion))
-            }
-        };
-
-        Some(mov)
+        Some(moves)
     }
 }
 
