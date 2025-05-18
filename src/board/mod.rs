@@ -314,6 +314,19 @@ impl Board {
             || !(rook::moves(ksq, combined) & (self.rooks_of(!color) | self.queens_of(!color))).is_empty()
     }
 
+    /// Get the pieces that checks the king of the color given.
+    #[must_use]
+    pub fn checkers(&self, color: Color) -> Bitboard {
+        let combined = self.combined();
+        let ksq = self.king_of(color);
+
+        (knight::moves(ksq) & self.knights_of(!color))
+            | (pawn::captures(color, ksq) & self.pawns_of(!color))
+            | (king::moves(ksq) & self.kings())
+            | (bishop::moves(ksq, combined) & (self.bishops_of(!color) | self.queens_of(!color)))
+            | (rook::moves(ksq, combined) & (self.rooks_of(!color) | self.queens_of(!color)))
+    }
+
     #[must_use]
     pub fn side_attack_def(&self, color: Color) -> Bitboard {
         let mut atkdef = Bitboard::default();
